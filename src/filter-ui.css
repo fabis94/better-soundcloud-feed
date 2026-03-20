@@ -1,0 +1,61 @@
+#sc-feed-filter-bar {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-family: Interstate, "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Garuda, Verdana, Tahoma, sans-serif;
+  font-size: 13px;
+  color: #ccc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scf-label {
+  font-weight: 600;
+  color: #f50;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.scf-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.scf-check input[type="checkbox"] {
+  accent-color: #f50;
+  cursor: pointer;
+}
+
+.scf-input {
+  flex: 1;
+  min-width: 200px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 3px;
+  padding: 6px 10px;
+  color: #ccc;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.scf-input:focus {
+  outline: none;
+  border-color: #f50;
+}
+
+.scf-input::placeholder {
+  color: #666;
+}

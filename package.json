@@ -1,0 +1,23 @@
+{
+  "name": "soundcloud-feed-filter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp build --watch",
+    "build": "vp build",
+    "check": "vp check",
+    "fmt": "vp fmt",
+    "test": "vp test"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "chrome-types": "^0.1.327",
+    "vite-plus": "^0.1.13"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:@voidzero-dev/vite-plus-core@latest"
+    }
+  }
+}

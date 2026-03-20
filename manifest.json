@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SoundCloud Feed Filter",
+  "version": "0.1.0",
+  "description": "Filter your SoundCloud feed by content type, artist, and genre/tags.",
+  "content_scripts": [
+    {
+      "matches": ["https://soundcloud.com/*"],
+      "js": ["content-script.js"],
+      "css": ["filter-ui.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://soundcloud.com/*"]
+    }
+  ],
+  "permissions": ["storage"]
+}
