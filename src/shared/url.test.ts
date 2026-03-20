@@ -45,10 +45,10 @@ describe("withLimit", () => {
 });
 
 describe("withActivityTypes", () => {
-  it("sets activity types on a URL", () => {
+  it("sets comma-separated activity types on a URL", () => {
     const result = withActivityTypes("https://api-v2.soundcloud.com/stream", ["TrackPost", "TrackRepost"]);
     const parsed = new URL(result);
-    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["TrackPost", "TrackRepost"]);
+    expect(parsed.searchParams.get("activityTypes")).toBe("TrackPost,TrackRepost");
   });
 
   it("replaces existing activity types", () => {
@@ -57,22 +57,22 @@ describe("withActivityTypes", () => {
       ["TrackPost"],
     );
     const parsed = new URL(result);
-    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["TrackPost"]);
+    expect(parsed.searchParams.get("activityTypes")).toBe("TrackPost");
   });
 
   it("handles single activity type", () => {
     const result = withActivityTypes("https://api-v2.soundcloud.com/stream", ["PlaylistPost"]);
     const parsed = new URL(result);
-    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["PlaylistPost"]);
+    expect(parsed.searchParams.get("activityTypes")).toBe("PlaylistPost");
   });
 
-  it("removes all activity types when array is empty", () => {
+  it("sets empty string when array is empty", () => {
     const result = withActivityTypes(
       "https://api-v2.soundcloud.com/stream?activityTypes=TrackPost",
       [],
     );
     const parsed = new URL(result);
-    expect(parsed.searchParams.getAll("activityTypes")).toEqual([]);
+    expect(parsed.searchParams.get("activityTypes")).toBe("");
   });
 
   it("preserves other query params", () => {
@@ -80,6 +80,6 @@ describe("withActivityTypes", () => {
     const parsed = new URL(result);
     expect(parsed.searchParams.get("limit")).toBe("20");
     expect(parsed.searchParams.get("offset")).toBe("0");
-    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["TrackPost"]);
+    expect(parsed.searchParams.get("activityTypes")).toBe("TrackPost");
   });
 });

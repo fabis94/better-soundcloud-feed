@@ -20,12 +20,9 @@ export function withLimit(url: string, limit: number): string {
   return parsed.toString();
 }
 
-/** Set activityTypes query params on a URL. */
+/** Set activityTypes query param on a URL (comma-separated, matching SC's format). */
 export function withActivityTypes(url: string, activityTypes: SCActivityType[]): string {
   const parsed = new URL(url);
-  parsed.searchParams.delete("activityTypes");
-  for (const t of activityTypes) {
-    parsed.searchParams.append("activityTypes", t);
-  }
+  parsed.searchParams.set("activityTypes", activityTypes.join(","));
   return parsed.toString();
 }
