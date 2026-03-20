@@ -10,14 +10,16 @@ interface InterceptedXHR extends XMLHttpRequest {
   _interceptUrl?: string;
 }
 
-const INTERCEPT_RE = /api-v2\.soundcloud\.com\/(stream|feed)/;
-
 export function createFetchInterceptor(
   originalFetch: typeof window.fetch,
   getFilters: () => FilterState,
   log: Logger,
 ): typeof window.fetch {
-  return async function (this: unknown, input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  return async function (
+    this: unknown,
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> {
     const url = extractUrl(input);
 
     if (!isStreamUrl(url)) {
@@ -53,10 +55,26 @@ export function createFetchInterceptor(
   };
 }
 
-export function patchXHR(
-  getFilters: () => FilterState,
-  log: Logger,
-): void {
+function filterXHRResponse(xhr: InterceptedXHR, filters: FilterState, log: Logger): void {
+  if (xhr.readyState !== 4) return;
+  try {
+    const data = JSON.parse(xhr.responseText) as SCStreamResponse;
+    const filtered = filterStreamResponse(data, filters);
+    const beforeCount = data.collection?.length ?? 0;
+    const afterCount = filtered.collection?.length ?? 0;
+    log.debug("XHR response filtered", {
+      beforeCount,
+      afterCount,
+      removed: beforeCount - afterCount,
+    });
+    Object.defineProperty(xhr, "responseText", { value: JSON.stringify(filtered) });
+    Object.defineProperty(xhr, "response", { value: JSON.stringify(filtered) });
+  } catch {
+    // non-JSON response, skip
+  }
+}
+
+export function patchXHR(getFilters: () => FilterState, log: Logger): void {
   const origOpen = XMLHttpRequest.prototype.open;
   const origSend = XMLHttpRequest.prototype.send;
 
@@ -72,10 +90,8 @@ export function patchXHR(
     this._interceptUrl = urlStr;
 
     const filters = getFilters();
-    const isIntercepted = INTERCEPT_RE.test(urlStr);
-    const finalUrl = isIntercepted
-      ? withActivityTypes(urlStr, filters.activityTypes)
-      : urlStr;
+    const isIntercepted = isStreamUrl(urlStr);
+    const finalUrl = isIntercepted ? withActivityTypes(urlStr, filters.activityTypes) : urlStr;
 
     if (isIntercepted) {
       log.debug("XHR intercepted", {
@@ -92,26 +108,10 @@ export function patchXHR(
     this: InterceptedXHR,
     body?: Document | XMLHttpRequestBodyInit | null,
   ) {
-    if (this._interceptUrl && INTERCEPT_RE.test(this._interceptUrl)) {
+    if (this._interceptUrl && isStreamUrl(this._interceptUrl)) {
       const filters = getFilters();
       this.addEventListener("readystatechange", function (this: InterceptedXHR) {
-        if (this.readyState === 4) {
-          try {
-            const data = JSON.parse(this.responseText) as SCStreamResponse;
-            const filtered = filterStreamResponse(data, filters);
-            const beforeCount = data.collection?.length ?? 0;
-            const afterCount = filtered.collection?.length ?? 0;
-            log.debug("XHR response filtered", {
-              beforeCount,
-              afterCount,
-              removed: beforeCount - afterCount,
-            });
-            Object.defineProperty(this, "responseText", { value: JSON.stringify(filtered) });
-            Object.defineProperty(this, "response", { value: JSON.stringify(filtered) });
-          } catch {
-            // non-JSON response, skip
-          }
-        }
+        filterXHRResponse(this, filters, log);
       });
     }
     return origSend.call(this, body);

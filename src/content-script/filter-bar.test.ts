@@ -196,7 +196,11 @@ describe("restoreFiltersToUI", () => {
 
   it("converts duration seconds to minutes", () => {
     const bar = createFilterBar();
-    restoreFiltersToUI(bar, { ...DEFAULT_FILTERS, minDurationSeconds: 120, maxDurationSeconds: 600 });
+    restoreFiltersToUI(bar, {
+      ...DEFAULT_FILTERS,
+      minDurationSeconds: 120,
+      maxDurationSeconds: 600,
+    });
     expect(bar.querySelector<HTMLInputElement>("#scf-min-duration")!.value).toBe("2");
     expect(bar.querySelector<HTMLInputElement>("#scf-max-duration")!.value).toBe("10");
   });

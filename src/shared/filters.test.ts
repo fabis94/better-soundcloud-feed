@@ -51,7 +51,14 @@ describe("matchesFilters", () => {
     it("matches by publisher artist", () => {
       const item = buildStreamItem({
         track: buildTrack({
-          publisher_metadata: { id: 1, urn: "x", artist: "Famous Artist", contains_music: true, isrc: "x", explicit: false },
+          publisher_metadata: {
+            id: 1,
+            urn: "x",
+            artist: "Famous Artist",
+            contains_music: true,
+            isrc: "x",
+            explicit: false,
+          },
         }),
       });
       expect(matchesFilters(item, buildFilters({ searchString: "famous" }))).toBe(true);
@@ -65,8 +72,12 @@ describe("matchesFilters", () => {
 
     it("AND operator: all terms must match", () => {
       const item = buildStreamItem({ track: buildTrack({ title: "UK Garage Mix" }) });
-      expect(matchesFilters(item, buildFilters({ searchString: "uk, garage", searchOperator: "and" }))).toBe(true);
-      expect(matchesFilters(item, buildFilters({ searchString: "uk, techno", searchOperator: "and" }))).toBe(false);
+      expect(
+        matchesFilters(item, buildFilters({ searchString: "uk, garage", searchOperator: "and" })),
+      ).toBe(true);
+      expect(
+        matchesFilters(item, buildFilters({ searchString: "uk, techno", searchOperator: "and" })),
+      ).toBe(false);
     });
 
     it("exclude terms hide items", () => {
@@ -151,12 +162,16 @@ describe("matchesFilters", () => {
 
     it("passes track within range", () => {
       const item = buildStreamItem({ track: buildTrack({ duration: 180000 }) }); // 180s
-      expect(matchesFilters(item, buildFilters({ minDurationSeconds: 60, maxDurationSeconds: 300 }))).toBe(true);
+      expect(
+        matchesFilters(item, buildFilters({ minDurationSeconds: 60, maxDurationSeconds: 300 })),
+      ).toBe(true);
     });
 
     it("null min/max means no constraint", () => {
       const item = buildStreamItem({ track: buildTrack({ duration: 1000 }) });
-      expect(matchesFilters(item, buildFilters({ minDurationSeconds: null, maxDurationSeconds: null }))).toBe(true);
+      expect(
+        matchesFilters(item, buildFilters({ minDurationSeconds: null, maxDurationSeconds: null })),
+      ).toBe(true);
     });
 
     it("playlists without tracks are not filtered by duration", () => {

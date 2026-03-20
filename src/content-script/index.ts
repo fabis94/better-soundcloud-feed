@@ -15,10 +15,10 @@ const log = createLogger("content-script");
 log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
 
 // Inject the page-context script before SC's JS runs
-const s = document.createElement("script");
-s.src = chrome.runtime.getURL("injected.js");
-s.onload = () => s.remove();
-(document.head ?? document.documentElement).prepend(s);
+const script = document.createElement("script");
+script.src = chrome.runtime.getURL("injected.js");
+script.onload = () => script.remove();
+(document.head ?? document.documentElement).prepend(script);
 
 const storage = createChromeFilterStorage();
 
@@ -62,11 +62,11 @@ export function injectFilterUI(): boolean {
 
   wireUpInteractions(bar, {
     onApply: applyFiltersFromUI,
-    onApplyReload: (b) => {
-      applyFiltersFromUI(b);
+    onApplyReload: (bar) => {
+      applyFiltersFromUI(bar);
       location.reload();
     },
-    onClear: (b) => restoreFiltersToUI(b, DEFAULT_FILTERS),
+    onClear: (bar) => restoreFiltersToUI(bar, DEFAULT_FILTERS),
     onHelp: openHelpModal,
   });
 

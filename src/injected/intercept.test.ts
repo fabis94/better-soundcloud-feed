@@ -24,9 +24,9 @@ describe("createFetchInterceptor", () => {
 
   it("modifies stream URLs with activityTypes", async () => {
     const streamResponse = buildStreamResponse({ collection: [] });
-    const original = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify(streamResponse)),
-    );
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(streamResponse)));
     const intercepted = createFetchInterceptor(
       original,
       () => makeFilters({ activityTypes: ["TrackPost"] }),
@@ -45,9 +45,9 @@ describe("createFetchInterceptor", () => {
       buildStreamItem({ type: "track", track: buildTrack({ title: "Remove Me" }) }),
     ];
     const streamResponse = buildStreamResponse({ collection: items });
-    const original = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify(streamResponse)),
-    );
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(streamResponse)));
 
     const intercepted = createFetchInterceptor(
       original,
@@ -79,9 +79,9 @@ describe("createFetchInterceptor", () => {
   });
 
   it("returns original response on JSON parse error", async () => {
-    const original = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response("not json", { status: 200 }),
-    );
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response("not json", { status: 200 }));
     const intercepted = createFetchInterceptor(original, () => makeFilters(), noopLog);
 
     const response = await intercepted("https://api-v2.soundcloud.com/stream");
@@ -91,9 +91,9 @@ describe("createFetchInterceptor", () => {
 
   it("reconstructs Request objects with modified URL", async () => {
     const streamResponse = buildStreamResponse({ collection: [] });
-    const original = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify(streamResponse)),
-    );
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(streamResponse)));
     const intercepted = createFetchInterceptor(
       original,
       () => makeFilters({ activityTypes: ["TrackPost"] }),
@@ -110,9 +110,9 @@ describe("createFetchInterceptor", () => {
 
   it("passes string inputs as modified URL strings", async () => {
     const streamResponse = buildStreamResponse({ collection: [] });
-    const original = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify(streamResponse)),
-    );
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(streamResponse)));
     const intercepted = createFetchInterceptor(
       original,
       () => makeFilters({ activityTypes: ["TrackRepost"] }),
@@ -151,8 +151,6 @@ describe("patchXHR", () => {
   it("passes non-stream XHR URLs through unmodified", () => {
     const openSpy = vi.fn();
     XMLHttpRequest.prototype.open = openSpy;
-    const savedOpen = XMLHttpRequest.prototype.open;
-
     // Restore then patch
     XMLHttpRequest.prototype.open = origOpen;
     patchXHR(() => makeFilters(), noopLog);
@@ -220,8 +218,16 @@ describe("patchXHR", () => {
 
     // Simulate readyState 4 with response
     Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
-    Object.defineProperty(xhr, "responseText", { value: JSON.stringify(responseData), writable: true, configurable: true });
-    Object.defineProperty(xhr, "response", { value: JSON.stringify(responseData), writable: true, configurable: true });
+    Object.defineProperty(xhr, "responseText", {
+      value: JSON.stringify(responseData),
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(xhr, "response", {
+      value: JSON.stringify(responseData),
+      writable: true,
+      configurable: true,
+    });
 
     capturedHandler?.call(xhr);
 
@@ -251,7 +257,11 @@ describe("patchXHR", () => {
     xhr.send();
 
     Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
-    Object.defineProperty(xhr, "responseText", { value: "not json", writable: true, configurable: true });
+    Object.defineProperty(xhr, "responseText", {
+      value: "not json",
+      writable: true,
+      configurable: true,
+    });
 
     capturedHandler?.call(xhr);
 

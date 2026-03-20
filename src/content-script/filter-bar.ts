@@ -1,6 +1,5 @@
 import type { FilterState } from "../shared/types";
 import { SCActivityType } from "../shared/types";
-import { DEFAULT_FILTERS } from "../shared/storage";
 
 export const FILTER_BAR_ID = "sc-feed-filter-bar";
 
@@ -18,7 +17,10 @@ export function createFilterBar(): HTMLElement {
     <div class="scf-row">
       <label class="scf-label">Show:</label>
       ${Object.values(SCActivityType)
-        .map((t) => `<label class="scf-check"><input type="checkbox" data-activity="${t}" checked> ${formatActivityType(t)}</label>`)
+        .map(
+          (t) =>
+            `<label class="scf-check"><input type="checkbox" data-activity="${t}" checked> ${formatActivityType(t)}</label>`,
+        )
         .join("\n      ")}
     </div>
     <div class="scf-row">

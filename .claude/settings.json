@@ -5,7 +5,9 @@
       "Bash(pnpm run:*)",
       "Bash(pnpm check:unused)",
       "Bash(pnpm test:*)",
-      "Bash(pnpm test:coverage)"
+      "Bash(pnpm test:coverage)",
+      "Bash(pnpm check:*)",
+      "Bash(pnpm typecheck:*)"
     ]
   }
 }

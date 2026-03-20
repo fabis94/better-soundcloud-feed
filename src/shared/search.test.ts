@@ -132,7 +132,14 @@ describe("field extractors", () => {
         description: "A great track",
         genre: "House",
         label_name: "Cool Label",
-        publisher_metadata: { id: 1, urn: "x", artist: "DJ Cool", contains_music: true, isrc: "x", explicit: false },
+        publisher_metadata: {
+          id: 1,
+          urn: "x",
+          artist: "DJ Cool",
+          contains_music: true,
+          isrc: "x",
+          explicit: false,
+        },
         user: buildUser({ username: "original-artist" }),
       }),
     });
@@ -175,7 +182,14 @@ describe("field extractors", () => {
     const item = buildStreamItem({
       track: buildTrack({
         label_name: "My Label",
-        publisher_metadata: { id: 1, urn: "x", artist: "Publisher Artist", contains_music: true, isrc: "x", explicit: false },
+        publisher_metadata: {
+          id: 1,
+          urn: "x",
+          artist: "Publisher Artist",
+          contains_music: true,
+          isrc: "x",
+          explicit: false,
+        },
       }),
     });
     const text = getLabelText(item);

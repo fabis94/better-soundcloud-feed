@@ -49,8 +49,10 @@ function matchesSearchFilters(item: SCStreamItem, filters: FilterState): boolean
 /** Check duration filter against a track's duration (ms). */
 function matchesDuration(durationMs: number | null | undefined, filters: FilterState): boolean {
   if (durationMs == null) return true;
-  if (filters.minDurationSeconds != null && durationMs < filters.minDurationSeconds * 1000) return false;
-  if (filters.maxDurationSeconds != null && durationMs > filters.maxDurationSeconds * 1000) return false;
+  if (filters.minDurationSeconds != null && durationMs < filters.minDurationSeconds * 1000)
+    return false;
+  if (filters.maxDurationSeconds != null && durationMs > filters.maxDurationSeconds * 1000)
+    return false;
   return true;
 }
 
@@ -69,7 +71,8 @@ export function matchesFilters(item: SCStreamItem, filters: FilterState): boolea
   if (hasTracks) {
     // Search: playlist-level metadata OR any track's metadata can match.
     // Duration: only checked against individual tracks (playlist total duration is not meaningful).
-    const hasDurationFilter = filters.minDurationSeconds != null || filters.maxDurationSeconds != null;
+    const hasDurationFilter =
+      filters.minDurationSeconds != null || filters.maxDurationSeconds != null;
     const playlistPasses = matchesSearchFilters(item, filters) && !hasDurationFilter;
     const anyTrackPasses = tracks.some((track) => {
       const trackItem: SCStreamItem = { ...item, track, playlist: undefined };

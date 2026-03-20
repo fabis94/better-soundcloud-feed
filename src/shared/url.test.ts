@@ -32,7 +32,10 @@ describe("extractUrl", () => {
 
 describe("withActivityTypes", () => {
   it("sets comma-separated activity types on a URL", () => {
-    const result = withActivityTypes("https://api-v2.soundcloud.com/stream", ["TrackPost", "TrackRepost"]);
+    const result = withActivityTypes("https://api-v2.soundcloud.com/stream", [
+      "TrackPost",
+      "TrackRepost",
+    ]);
     const parsed = new URL(result);
     expect(parsed.searchParams.get("activityTypes")).toBe("TrackPost,TrackRepost");
   });
@@ -62,7 +65,9 @@ describe("withActivityTypes", () => {
   });
 
   it("preserves other query params", () => {
-    const result = withActivityTypes("https://api-v2.soundcloud.com/stream?limit=20&offset=0", ["TrackPost"]);
+    const result = withActivityTypes("https://api-v2.soundcloud.com/stream?limit=20&offset=0", [
+      "TrackPost",
+    ]);
     const parsed = new URL(result);
     expect(parsed.searchParams.get("limit")).toBe("20");
     expect(parsed.searchParams.get("offset")).toBe("0");

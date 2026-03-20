@@ -2,6 +2,7 @@ import { defineConfig } from "vite-plus";
 import { resolve } from "node:path";
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 
+const root = import.meta.dirname;
 const isDev = process.argv.includes("--watch");
 
 const iife = {
@@ -10,6 +11,9 @@ const iife = {
 };
 
 export default defineConfig({
+  fmt: {
+    ignorePatterns: ["coverage/**", ".universal-ai-config/**"],
+  },
   define: {
     __DEV__: JSON.stringify(isDev),
   },
@@ -20,7 +24,7 @@ export default defineConfig({
         emptyOutDir: false,
         ...iife,
         rolldownOptions: {
-          input: { "content-script": resolve(__dirname, "src/content-script/index.ts") },
+          input: { "content-script": resolve(root, "src/content-script/index.ts") },
           output: { format: "iife", entryFileNames: "[name].js" },
         },
       },
@@ -32,7 +36,7 @@ export default defineConfig({
         emptyOutDir: false,
         ...iife,
         rolldownOptions: {
-          input: { injected: resolve(__dirname, "src/injected/index.ts") },
+          input: { injected: resolve(root, "src/injected/index.ts") },
           output: { format: "iife", entryFileNames: "[name].js" },
         },
       },
@@ -60,7 +64,7 @@ export default defineConfig({
     {
       name: "copy-public",
       buildStart() {
-        this.addWatchFile(resolve(__dirname, "public"));
+        this.addWatchFile(resolve(root, "public"));
       },
       closeBundle() {
         cpSync("public", "dist", { recursive: true });

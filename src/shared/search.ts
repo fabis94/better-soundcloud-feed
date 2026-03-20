@@ -16,7 +16,10 @@ export function parseSearchString(raw: string): ParsedSearch {
   const includes: RegExp[] = [];
   const excludes: RegExp[] = [];
 
-  const terms = raw.split(",").map((t) => t.trim()).filter(Boolean);
+  const terms = raw
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   for (const term of terms) {
     if (term.startsWith("-") && term.length > 1) {
@@ -67,7 +70,8 @@ export function getAllSearchableText(item: SCStreamItem): string {
     inner?.user?.username ?? "",
     item?.user?.username ?? "",
     (inner as { label_name?: string } | undefined)?.label_name ?? "",
-    (inner as { publisher_metadata?: { artist?: string } } | undefined)?.publisher_metadata?.artist ?? "",
+    (inner as { publisher_metadata?: { artist?: string } } | undefined)?.publisher_metadata
+      ?.artist ?? "",
   ].join("\n");
 }
 
@@ -91,6 +95,8 @@ export function getArtistText(item: SCStreamItem): string {
 }
 
 export function getLabelText(item: SCStreamItem): string {
-  const track = item?.track as { label_name?: string; publisher_metadata?: { artist?: string } } | undefined;
+  const track = item?.track as
+    | { label_name?: string; publisher_metadata?: { artist?: string } }
+    | undefined;
   return [track?.label_name ?? "", track?.publisher_metadata?.artist ?? ""].join("\n");
 }

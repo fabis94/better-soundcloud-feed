@@ -6,7 +6,7 @@ import type {
   SCStreamResponse,
   FilterState,
 } from "../shared/types";
-import { SCActivityType } from "../shared/types";
+import { DEFAULT_FILTERS } from "../shared/storage";
 
 let _id = 0;
 const nextId = (): number => ++_id;
@@ -137,18 +137,5 @@ export function buildStreamResponse(overrides: Record<string, unknown> = {}): SC
 }
 
 export function buildFilters(overrides: Partial<FilterState> = {}): FilterState {
-  return {
-    activityTypes: Object.values(SCActivityType),
-    searchMode: "simple",
-    searchString: "",
-    searchTitle: "",
-    searchDescription: "",
-    searchGenre: "",
-    searchArtist: "",
-    searchLabel: "",
-    searchOperator: "and",
-    minDurationSeconds: null,
-    maxDurationSeconds: null,
-    ...overrides,
-  };
+  return { ...DEFAULT_FILTERS, ...overrides };
 }
