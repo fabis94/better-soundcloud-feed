@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@voidzero-dev/vite-plus-test";
-import { isStreamUrl, extractUrl, withLimit, withActivityTypes } from "./url";
+import { isStreamUrl, extractUrl, withActivityTypes } from "./url";
 
 describe("isStreamUrl", () => {
   it("matches stream API URLs", () => {
@@ -27,20 +27,6 @@ describe("extractUrl", () => {
   it("converts URL object to string", () => {
     const url = new URL("https://example.com/path");
     expect(extractUrl(url)).toBe("https://example.com/path");
-  });
-});
-
-describe("withLimit", () => {
-  it("sets the limit query param", () => {
-    const result = withLimit("https://api-v2.soundcloud.com/stream?limit=20", 50);
-    const parsed = new URL(result);
-    expect(parsed.searchParams.get("limit")).toBe("50");
-  });
-
-  it("adds limit if not present", () => {
-    const result = withLimit("https://api-v2.soundcloud.com/stream", 50);
-    const parsed = new URL(result);
-    expect(parsed.searchParams.get("limit")).toBe("50");
   });
 });
 

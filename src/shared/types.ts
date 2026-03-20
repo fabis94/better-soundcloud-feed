@@ -140,10 +140,14 @@ interface SCRawStreamResponse {
 
 type Deep<T> = PartialDeep<T, { recurseIntoArrays: true }>;
 
+/** @knipignore SC API surface — complete set, intentionally exported */
 export type SCBadges = Deep<SCRawBadges>;
 export type SCUser = Deep<SCRawUser>;
+/** @knipignore */
 export type SCTranscodingFormat = Deep<SCRawTranscodingFormat>;
+/** @knipignore */
 export type SCTranscoding = Deep<SCRawTranscoding>;
+/** @knipignore */
 export type SCPublisherMetadata = Deep<SCRawPublisherMetadata>;
 export type SCTrack = Deep<SCRawTrack>;
 export type SCPlaylist = Deep<SCRawPlaylist>;
@@ -160,6 +164,7 @@ export const SCActivityType = {
 
 export type SCActivityType = (typeof SCActivityType)[keyof typeof SCActivityType];
 
+/** @knipignore */
 export interface SCStreamParams {
   sc_a_id: string;
   device_locale: string;
