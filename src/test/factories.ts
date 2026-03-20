@@ -104,6 +104,7 @@ export function buildPlaylist(overrides: Partial<SCPlaylist> = {}): SCPlaylist {
     duration: 900000,
     artwork_url: null,
     created_at: new Date().toISOString(),
+    tracks: [],
     ...overrides,
   };
 }

@@ -117,6 +117,7 @@ interface SCRawPlaylist {
   duration: number;
   artwork_url: string | null;
   created_at: string;
+  tracks: SCRawTrack[];
 }
 
 interface SCRawStreamItem {
@@ -137,15 +138,17 @@ interface SCRawStreamResponse {
 
 // --- Exported deeply partial types (SC can change their API at any time) ---
 
-export type SCBadges = PartialDeep<SCRawBadges>;
-export type SCUser = PartialDeep<SCRawUser>;
-export type SCTranscodingFormat = PartialDeep<SCRawTranscodingFormat>;
-export type SCTranscoding = PartialDeep<SCRawTranscoding>;
-export type SCPublisherMetadata = PartialDeep<SCRawPublisherMetadata>;
-export type SCTrack = PartialDeep<SCRawTrack>;
-export type SCPlaylist = PartialDeep<SCRawPlaylist>;
-export type SCStreamItem = PartialDeep<SCRawStreamItem>;
-export type SCStreamResponse = PartialDeep<SCRawStreamResponse>;
+type Deep<T> = PartialDeep<T, { recurseIntoArrays: true }>;
+
+export type SCBadges = Deep<SCRawBadges>;
+export type SCUser = Deep<SCRawUser>;
+export type SCTranscodingFormat = Deep<SCRawTranscodingFormat>;
+export type SCTranscoding = Deep<SCRawTranscoding>;
+export type SCPublisherMetadata = Deep<SCRawPublisherMetadata>;
+export type SCTrack = Deep<SCRawTrack>;
+export type SCPlaylist = Deep<SCRawPlaylist>;
+export type SCStreamItem = Deep<SCRawStreamItem>;
+export type SCStreamResponse = Deep<SCRawStreamResponse>;
 
 // --- Stream endpoint query params ---
 

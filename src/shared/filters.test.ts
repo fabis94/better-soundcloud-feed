@@ -3,6 +3,7 @@ import { matchesFilters, filterStreamResponse } from "./filters";
 import {
   buildStreamItem,
   buildTrack,
+  buildPlaylist,
   buildUser,
   buildFilters,
   buildStreamResponse,
@@ -158,9 +159,64 @@ describe("matchesFilters", () => {
       expect(matchesFilters(item, buildFilters({ minDurationSeconds: null, maxDurationSeconds: null }))).toBe(true);
     });
 
-    it("playlists are not filtered by duration", () => {
+    it("playlists without tracks are not filtered by duration", () => {
       const item = buildStreamItem({ type: "playlist" });
       expect(matchesFilters(item, buildFilters({ minDurationSeconds: 9999 }))).toBe(true);
+    });
+
+    it("playlist passes if any track fits duration", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          tracks: [buildTrack({ duration: 60000 }), buildTrack({ duration: 300000 })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ minDurationSeconds: 240 }))).toBe(true);
+    });
+
+    it("playlist rejected if no track fits duration", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          tracks: [buildTrack({ duration: 60000 }), buildTrack({ duration: 90000 })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ minDurationSeconds: 240 }))).toBe(false);
+    });
+  });
+
+  describe("playlist track fallback", () => {
+    it("playlist passes if any track matches search", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          title: "Random Playlist",
+          tracks: [buildTrack({ title: "Garage Vibes" }), buildTrack({ title: "Ambient Drone" })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ searchString: "garage" }))).toBe(true);
+    });
+
+    it("playlist passes if playlist itself matches search", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          title: "Best Garage Tunes",
+          tracks: [buildTrack({ title: "Track 1" }), buildTrack({ title: "Track 2" })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ searchString: "garage" }))).toBe(true);
+    });
+
+    it("playlist rejected if neither playlist nor tracks match", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          title: "My Playlist",
+          tracks: [buildTrack({ title: "Track 1" }), buildTrack({ title: "Track 2" })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ searchString: "garage" }))).toBe(false);
     });
   });
 

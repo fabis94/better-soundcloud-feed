@@ -10,12 +10,8 @@ import {
   getLabelText,
 } from "./search";
 
-/** Test whether a single stream item passes all active filters. */
-export function matchesFilters(item: SCStreamItem, filters: FilterState): boolean {
-  const inner = item?.track ?? item?.playlist;
-  if (!inner) return false;
-
-  // Search filter
+/** Check search filters against a single stream item. */
+function matchesSearchFilters(item: SCStreamItem, filters: FilterState): boolean {
   if (filters.searchMode === "simple") {
     if (filters.searchString) {
       const parsed = parseSearchString(filters.searchString);
@@ -23,7 +19,6 @@ export function matchesFilters(item: SCStreamItem, filters: FilterState): boolea
       if (!matchesSearch(text, parsed, filters.searchOperator)) return false;
     }
   } else {
-    // Extended mode: each non-empty field is matched against its extractor
     const fieldChecks: [string, string][] = [
       [filters.searchTitle, getTitleText(item)],
       [filters.searchDescription, getDescriptionText(item)],
@@ -48,13 +43,44 @@ export function matchesFilters(item: SCStreamItem, filters: FilterState): boolea
     }
   }
 
-  // Duration filter (tracks only — playlists pass through)
-  const duration = item?.track?.duration;
-  if (duration != null) {
-    if (filters.minDurationSeconds != null && duration < filters.minDurationSeconds * 1000) return false;
-    if (filters.maxDurationSeconds != null && duration > filters.maxDurationSeconds * 1000) return false;
+  return true;
+}
+
+/** Check duration filter against a track's duration (ms). */
+function matchesDuration(durationMs: number | null | undefined, filters: FilterState): boolean {
+  if (durationMs == null) return true;
+  if (filters.minDurationSeconds != null && durationMs < filters.minDurationSeconds * 1000) return false;
+  if (filters.maxDurationSeconds != null && durationMs > filters.maxDurationSeconds * 1000) return false;
+  return true;
+}
+
+/**
+ * Test whether a stream item passes all active filters.
+ * For playlists with tracks: passes if the playlist itself OR any of its tracks match
+ * (search and duration are checked independently per candidate).
+ */
+export function matchesFilters(item: SCStreamItem, filters: FilterState): boolean {
+  const inner = item?.track ?? item?.playlist;
+  if (!inner) return false;
+
+  const tracks = item?.playlist?.tracks;
+  const hasTracks = tracks != null && tracks.length > 0;
+
+  if (hasTracks) {
+    // Search: playlist-level metadata OR any track's metadata can match.
+    // Duration: only checked against individual tracks (playlist total duration is not meaningful).
+    const hasDurationFilter = filters.minDurationSeconds != null || filters.maxDurationSeconds != null;
+    const playlistPasses = matchesSearchFilters(item, filters) && !hasDurationFilter;
+    const anyTrackPasses = tracks.some((track) => {
+      const trackItem: SCStreamItem = { ...item, track, playlist: undefined };
+      return matchesSearchFilters(trackItem, filters) && matchesDuration(track?.duration, filters);
+    });
+    return playlistPasses || anyTrackPasses;
   }
 
+  // Single track
+  if (!matchesSearchFilters(item, filters)) return false;
+  if (!matchesDuration(item?.track?.duration, filters)) return false;
   return true;
 }
 
