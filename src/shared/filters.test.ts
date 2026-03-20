@@ -6,7 +6,7 @@ import {
   buildUser,
   buildFilters,
   buildStreamResponse,
-} from "./test-factories";
+} from "../test/factories";
 
 describe("matchesFilters", () => {
   it("allows items whose type is in the whitelist", () => {

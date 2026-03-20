@@ -5,12 +5,12 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 const isDev = process.argv.includes("--watch");
 
 const input: Record<string, string> = {
-  "content-script": resolve(__dirname, "src/content-script.ts"),
-  injected: resolve(__dirname, "src/injected.ts"),
+  "content-script": resolve(__dirname, "src/content-script/index.ts"),
+  injected: resolve(__dirname, "src/injected/index.ts"),
 };
 
 if (isDev) {
-  input.background = resolve(__dirname, "src/background.ts");
+  input.background = resolve(__dirname, "src/hotreload/index.ts");
 }
 
 export default defineConfig({
@@ -35,7 +35,7 @@ export default defineConfig({
       name: "copy-extension-files",
       closeBundle() {
         mkdirSync("dist", { recursive: true });
-        copyFileSync("src/filter-ui.css", "dist/filter-ui.css");
+        copyFileSync("src/content-script/filter-ui.css", "dist/filter-ui.css");
 
         const manifest = JSON.parse(readFileSync("manifest.json", "utf-8"));
         if (isDev) {

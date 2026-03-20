@@ -1,6 +1,6 @@
-import type { SCStreamResponse, FilterState, BridgeMessage } from "./types";
-import { filterStreamResponse } from "./filters";
-import { isStreamUrl, extractUrl } from "./url";
+import type { SCStreamResponse, FilterState, BridgeMessage } from "../shared/types";
+import { filterStreamResponse } from "../shared/filters";
+import { isStreamUrl, extractUrl } from "../shared/url";
 
 (function () {
   const originalFetch = window.fetch;

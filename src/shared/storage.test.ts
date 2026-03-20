@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
 import { createFilterStorage } from "./storage";
 import type { StorageBackend } from "./storage";
-import { buildFilters } from "./test-factories";
+import { buildFilters } from "../test/factories";
 
 function mockBackend(initial: Record<string, unknown> = {}): StorageBackend {
   const store = { ...initial };

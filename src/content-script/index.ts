@@ -1,6 +1,6 @@
-import type { FilterState, FilterUpdateMessage } from "./types";
-import { createChromeFilterStorage } from "./storage";
-import { createLogger } from "./logger";
+import type { FilterState, FilterUpdateMessage } from "../shared/types";
+import { createChromeFilterStorage } from "../shared/storage";
+import { createLogger } from "../shared/logger";
 
 const log = createLogger("content-script");
 log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
@@ -94,10 +94,10 @@ async function restoreFiltersToUI(bar: HTMLElement): Promise<void> {
   sendFilters(filters);
 }
 
-function injectFilterUI(): void {
+function injectFilterUI(): boolean {
   if (document.getElementById(FILTER_BAR_ID)) {
     log.debug("Filter bar already injected, skipping");
-    return;
+    return true;
   }
 
   // Find SC's feed container — try known selectors
@@ -108,7 +108,7 @@ function injectFilterUI(): void {
 
   if (!feedContainer) {
     log.debug("Feed container not found (stream__list: {sl}, [class*=stream]: {sw}, main: {m})", { sl: !!streamList, sw: !!streamWild, m: !!main });
-    return;
+    return false;
   }
 
   log.debug("Feed container found: {tag}.{cls}", { tag: feedContainer.tagName, cls: feedContainer.className });
@@ -122,6 +122,7 @@ function injectFilterUI(): void {
 
   bar.addEventListener("change", () => applyFiltersFromUI(bar));
   bar.addEventListener("input", () => applyFiltersFromUI(bar));
+  return true;
 }
 
 // SPA-aware injection: watch for route changes / DOM mutations

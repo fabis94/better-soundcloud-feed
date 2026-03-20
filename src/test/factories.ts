@@ -5,7 +5,7 @@ import type {
   SCStreamItem,
   SCStreamResponse,
   FilterState,
-} from "./types";
+} from "../shared/types";
 
 let _id = 0;
 const nextId = (): number => ++_id;
