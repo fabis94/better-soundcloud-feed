@@ -31,10 +31,10 @@ After `pnpm dev` rebuilds, reload the extension in `edge://extensions` to pick u
 
 ## Filters
 
-| Filter | Behavior |
-|---|---|
-| **Content type** | Checkboxes to show/hide tracks, track reposts, playlists, playlist reposts |
-| **Exclude artists** | Comma-separated permalinks — hides items by artist or reposter |
+| Filter                  | Behavior                                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Content type**        | Checkboxes to show/hide tracks, track reposts, playlists, playlist reposts                                                                         |
+| **Exclude artists**     | Comma-separated permalinks — hides items by artist or reposter                                                                                     |
 | **Genre/tag whitelist** | Comma-separated terms — if any specified, only shows items matching at least one (case-insensitive substring match against `genre` and `tag_list`) |
 
 Filter state persists via `chrome.storage.local`.

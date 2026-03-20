@@ -1,4 +1,11 @@
-import type { SCUser, SCTrack, SCPlaylist, SCStreamItem, SCStreamResponse, FilterState } from './types';
+import type {
+  SCUser,
+  SCTrack,
+  SCPlaylist,
+  SCStreamItem,
+  SCStreamResponse,
+  FilterState,
+} from "./types";
 
 let _id = 0;
 const nextId = (): number => ++_id;
@@ -10,10 +17,10 @@ export function buildUser(overrides: Partial<SCUser> = {}): SCUser {
     username: `user-${id}`,
     permalink: `user-${id}`,
     avatar_url: `https://i1.sndcdn.com/avatars-${id}.jpg`,
-    first_name: '',
-    full_name: '',
-    last_name: '',
-    kind: 'user',
+    first_name: "",
+    full_name: "",
+    last_name: "",
+    kind: "user",
     last_modified: new Date().toISOString(),
     permalink_url: `https://soundcloud.com/user-${id}`,
     uri: `https://api.soundcloud.com/users/soundcloud%3Ausers%3A${id}`,
@@ -35,8 +42,8 @@ export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
   return {
     id,
     title: `Track ${id}`,
-    genre: '',
-    tag_list: '',
+    genre: "",
+    tag_list: "",
     duration: 180000,
     full_duration: 180000,
     artwork_url: null,
@@ -44,15 +51,15 @@ export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
     commentable: true,
     comment_count: 0,
     created_at: new Date().toISOString(),
-    description: '',
+    description: "",
     downloadable: false,
     download_count: 0,
-    embeddable_by: 'all',
+    embeddable_by: "all",
     has_downloads_left: false,
-    kind: 'track',
-    label_name: '',
+    kind: "track",
+    label_name: "",
     last_modified: new Date().toISOString(),
-    license: 'all-rights-reserved',
+    license: "all-rights-reserved",
     likes_count: 0,
     permalink: `track-${id}`,
     permalink_url: `https://soundcloud.com/${user.permalink}/track-${id}`,
@@ -64,8 +71,8 @@ export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
     release_date: null,
     reposts_count: 0,
     secret_token: null,
-    sharing: 'public',
-    state: 'finished',
+    sharing: "public",
+    state: "finished",
     streamable: true,
     uri: `https://api.soundcloud.com/tracks/soundcloud%3Atracks%3A${id}`,
     urn: `soundcloud:tracks:${id}`,
@@ -76,9 +83,9 @@ export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
     media: { transcodings: [] },
     station_urn: `soundcloud:system-playlists:track-stations:${id}`,
     station_permalink: `track-stations:${id}`,
-    track_authorization: '',
-    monetization_model: 'NOT_APPLICABLE',
-    policy: 'ALLOW',
+    track_authorization: "",
+    monetization_model: "NOT_APPLICABLE",
+    policy: "ALLOW",
     user,
     ...overrides,
   };
@@ -89,8 +96,8 @@ export function buildPlaylist(overrides: Partial<SCPlaylist> = {}): SCPlaylist {
   return {
     id,
     title: `Playlist ${id}`,
-    genre: '',
-    tag_list: '',
+    genre: "",
+    tag_list: "",
     user: buildUser(),
     track_count: 5,
     duration: 900000,
@@ -101,7 +108,7 @@ export function buildPlaylist(overrides: Partial<SCPlaylist> = {}): SCPlaylist {
 }
 
 export function buildStreamItem(overrides: Partial<SCStreamItem> = {}): SCStreamItem {
-  const type = overrides.type ?? 'track';
+  const type = overrides.type ?? "track";
   const user = overrides.user ?? buildUser();
   const base: SCStreamItem = {
     type,
@@ -110,7 +117,7 @@ export function buildStreamItem(overrides: Partial<SCStreamItem> = {}): SCStream
     uuid: String(nextId()),
     caption: null,
   };
-  if (type === 'track' || type === 'track-repost') {
+  if (type === "track" || type === "track-repost") {
     base.track = buildTrack();
   } else {
     base.playlist = buildPlaylist();
@@ -129,7 +136,7 @@ export function buildStreamResponse(overrides: Partial<SCStreamResponse> = {}): 
 
 export function buildFilters(overrides: Partial<FilterState> = {}): FilterState {
   return {
-    types: ['track', 'track-repost', 'playlist', 'playlist-repost'],
+    types: ["track", "track-repost", "playlist", "playlist-repost"],
     excludeArtists: [],
     genres: [],
     ...overrides,

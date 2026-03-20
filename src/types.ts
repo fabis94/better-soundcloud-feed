@@ -30,7 +30,7 @@ export interface SCUser {
 }
 
 export interface SCTranscodingFormat {
-  protocol: 'hls' | 'progressive';
+  protocol: "hls" | "progressive";
   mime_type: string;
 }
 
@@ -117,11 +117,7 @@ export interface SCPlaylist {
   created_at: string;
 }
 
-export type SCStreamItemType =
-  | 'track'
-  | 'track-repost'
-  | 'playlist'
-  | 'playlist-repost';
+export type SCStreamItemType = "track" | "track-repost" | "playlist" | "playlist-repost";
 
 export interface SCStreamItem {
   created_at: string;
@@ -141,7 +137,7 @@ export interface SCStreamResponse {
 
 // --- Stream endpoint query params ---
 
-export type SCActivityType = 'TrackPost' | 'TrackRepost' | 'PlaylistPost';
+export type SCActivityType = "TrackPost" | "TrackRepost" | "PlaylistPost";
 
 export interface SCStreamParams {
   sc_a_id: string;
@@ -170,12 +166,12 @@ export interface FilterState {
 // --- Message protocol ---
 
 export interface FilterUpdateMessage {
-  type: 'SC_FILTER_UPDATE';
+  type: "SC_FILTER_UPDATE";
   filters: FilterState;
 }
 
 export interface FilterReadyMessage {
-  type: 'SC_FILTER_READY';
+  type: "SC_FILTER_READY";
 }
 
 export type BridgeMessage = FilterUpdateMessage | FilterReadyMessage;

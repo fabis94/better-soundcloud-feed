@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from '@voidzero-dev/vite-plus-test';
-import { createFilterStorage } from './storage';
-import type { StorageBackend } from './storage';
-import { buildFilters } from './test-factories';
+import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
+import { createFilterStorage } from "./storage";
+import type { StorageBackend } from "./storage";
+import { buildFilters } from "./test-factories";
 
 function mockBackend(initial: Record<string, unknown> = {}): StorageBackend {
   const store = { ...initial };
@@ -20,8 +20,8 @@ function mockBackend(initial: Record<string, unknown> = {}): StorageBackend {
   };
 }
 
-describe('createFilterStorage', () => {
-  it('returns defaults when storage is empty', async () => {
+describe("createFilterStorage", () => {
+  it("returns defaults when storage is empty", async () => {
     const storage = createFilterStorage(mockBackend());
     const filters = await storage.load();
     expect(filters.types).toHaveLength(4);
@@ -29,22 +29,22 @@ describe('createFilterStorage', () => {
     expect(filters.genres).toEqual([]);
   });
 
-  it('merges stored values with defaults', async () => {
+  it("merges stored values with defaults", async () => {
     const backend = mockBackend({
-      'sc-feed-filters': { excludeArtists: ['spammer'] },
+      "sc-feed-filters": { excludeArtists: ["spammer"] },
     });
     const storage = createFilterStorage(backend);
     const filters = await storage.load();
-    expect(filters.excludeArtists).toEqual(['spammer']);
+    expect(filters.excludeArtists).toEqual(["spammer"]);
     expect(filters.types).toHaveLength(4);
   });
 
-  it('round-trips save and load', async () => {
+  it("round-trips save and load", async () => {
     const backend = mockBackend();
     const storage = createFilterStorage(backend);
-    const filters = buildFilters({ genres: ['garage', 'dubstep'] });
+    const filters = buildFilters({ genres: ["garage", "dubstep"] });
     await storage.save(filters);
     const loaded = await storage.load();
-    expect(loaded.genres).toEqual(['garage', 'dubstep']);
+    expect(loaded.genres).toEqual(["garage", "dubstep"]);
   });
 });

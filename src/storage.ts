@@ -1,12 +1,12 @@
-import type { FilterState, SCStreamItemType } from './types';
+import type { FilterState, SCStreamItemType } from "./types";
 
 const DEFAULT_FILTERS: FilterState = {
-  types: ['track', 'track-repost', 'playlist', 'playlist-repost'] satisfies SCStreamItemType[],
+  types: ["track", "track-repost", "playlist", "playlist-repost"] satisfies SCStreamItemType[],
   excludeArtists: [],
   genres: [],
 };
 
-const STORAGE_KEY = 'sc-feed-filters';
+const STORAGE_KEY = "sc-feed-filters";
 
 export interface StorageBackend {
   get(keys: string | string[]): Promise<Record<string, unknown>>;
@@ -18,7 +18,7 @@ export function createFilterStorage(backend: StorageBackend) {
     async load(): Promise<FilterState> {
       const result = await backend.get(STORAGE_KEY);
       const stored = result[STORAGE_KEY];
-      if (stored && typeof stored === 'object') {
+      if (stored && typeof stored === "object") {
         return { ...DEFAULT_FILTERS, ...(stored as Partial<FilterState>) };
       }
       return { ...DEFAULT_FILTERS };

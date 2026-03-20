@@ -14,6 +14,6 @@ export function extractUrl(input: RequestInfo | URL): string {
 /** Override the `limit` query param on a URL. */
 export function withLimit(url: string, limit: number): string {
   const parsed = new URL(url);
-  parsed.searchParams.set('limit', String(limit));
+  parsed.searchParams.set("limit", String(limit));
   return parsed.toString();
 }

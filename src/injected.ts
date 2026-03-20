@@ -1,25 +1,22 @@
-import type { SCStreamResponse, FilterState, BridgeMessage } from './types';
-import { filterStreamResponse } from './filters';
-import { isStreamUrl, extractUrl } from './url';
+import type { SCStreamResponse, FilterState, BridgeMessage } from "./types";
+import { filterStreamResponse } from "./filters";
+import { isStreamUrl, extractUrl } from "./url";
 
 (function () {
   const originalFetch = window.fetch;
 
   let currentFilters: FilterState = {
-    types: ['track', 'track-repost', 'playlist', 'playlist-repost'],
+    types: ["track", "track-repost", "playlist", "playlist-repost"],
     excludeArtists: [],
     genres: [],
   };
 
-  window.addEventListener('message', (e: MessageEvent<BridgeMessage>) => {
-    if (e.source !== window || e.data?.type !== 'SC_FILTER_UPDATE') return;
+  window.addEventListener("message", (e: MessageEvent<BridgeMessage>) => {
+    if (e.source !== window || e.data?.type !== "SC_FILTER_UPDATE") return;
     currentFilters = e.data.filters;
   });
 
-  window.fetch = async function (
-    input: RequestInfo | URL,
-    init?: RequestInit,
-  ): Promise<Response> {
+  window.fetch = async function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     const url = extractUrl(input);
 
     if (!isStreamUrl(url)) {
@@ -71,15 +68,15 @@ import { isStreamUrl, extractUrl } from './url';
     body?: Document | XMLHttpRequestBodyInit | null,
   ) {
     if (this._interceptUrl && INTERCEPT_RE.test(this._interceptUrl)) {
-      this.addEventListener('readystatechange', function (this: InterceptedXHR) {
+      this.addEventListener("readystatechange", function (this: InterceptedXHR) {
         if (this.readyState === 4) {
           try {
             const filtered = filterStreamResponse(
               JSON.parse(this.responseText) as SCStreamResponse,
               currentFilters,
             );
-            Object.defineProperty(this, 'responseText', { value: JSON.stringify(filtered) });
-            Object.defineProperty(this, 'response', { value: JSON.stringify(filtered) });
+            Object.defineProperty(this, "responseText", { value: JSON.stringify(filtered) });
+            Object.defineProperty(this, "response", { value: JSON.stringify(filtered) });
           } catch {
             // non-JSON response, skip
           }
@@ -90,5 +87,5 @@ import { isStreamUrl, extractUrl } from './url';
   };
 
   // Signal readiness
-  window.postMessage({ type: 'SC_FILTER_READY' }, '*');
+  window.postMessage({ type: "SC_FILTER_READY" }, "*");
 })();

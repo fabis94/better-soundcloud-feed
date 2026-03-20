@@ -1,4 +1,4 @@
-import type { SCStreamItem, SCStreamResponse, FilterState } from './types';
+import type { SCStreamItem, SCStreamResponse, FilterState } from "./types";
 
 /** Test whether a single stream item passes all active filters. */
 export function matchesFilters(item: SCStreamItem, filters: FilterState): boolean {
@@ -17,9 +17,9 @@ export function matchesFilters(item: SCStreamItem, filters: FilterState): boolea
 
   // Genre/tag whitelist (if specified, must match at least one)
   if (filters.genres.length > 0) {
-    const genre = (inner.genre ?? '').toLowerCase();
+    const genre = (inner.genre ?? "").toLowerCase();
     const tags = inner.tag_list.toLowerCase();
-    const hasMatch = filters.genres.some(g => genre.includes(g) || tags.includes(g));
+    const hasMatch = filters.genres.some((g) => genre.includes(g) || tags.includes(g));
     if (!hasMatch) return false;
   }
 
@@ -33,6 +33,6 @@ export function filterStreamResponse(
 ): SCStreamResponse {
   return {
     ...response,
-    collection: response.collection.filter(item => matchesFilters(item, filters)),
+    collection: response.collection.filter((item) => matchesFilters(item, filters)),
   };
 }
