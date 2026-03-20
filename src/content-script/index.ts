@@ -78,10 +78,13 @@ function readFiltersFromUI(bar: HTMLElement): FilterState {
 
   // Search operator
   const activeBtn = bar.querySelector<HTMLElement>(".scf-pill-btn.scf-pill-active");
-  const searchOperator = (activeBtn?.dataset["op"] === "or" ? "or" : "and") as FilterState["searchOperator"];
+  const searchOperator = (
+    activeBtn?.dataset["op"] === "or" ? "or" : "and"
+  ) as FilterState["searchOperator"];
 
   // Search mode
-  const isExtended = bar.querySelector<HTMLElement>(".scf-search-extended")!.style.display !== "none";
+  const isExtended =
+    bar.querySelector<HTMLElement>(".scf-search-extended")!.style.display !== "none";
   const searchMode: FilterState["searchMode"] = isExtended ? "extended" : "simple";
 
   // Search values
@@ -120,7 +123,6 @@ function applyFiltersFromUI(bar: HTMLElement): void {
 }
 
 function restoreFiltersToUI(bar: HTMLElement, filters: FilterState): void {
-
   // Activity type checkboxes
   const activityCheckboxes = bar.querySelectorAll<HTMLInputElement>("input[data-activity]");
   for (const cb of activityCheckboxes) {
@@ -207,7 +209,7 @@ function wireUpInteractions(bar: HTMLElement): void {
 
 function injectFilterUI(): boolean {
   if (document.getElementById(FILTER_BAR_ID)) {
-    log.debug("Filter bar already injected, skipping");
+    // log.debug("Filter bar already injected, skipping");
     return true;
   }
 
@@ -217,15 +219,18 @@ function injectFilterUI(): boolean {
   const feedContainer = streamList ?? streamWild ?? main;
 
   if (!feedContainer) {
-    log.debug("Feed container not found (stream__list: {sl}, [class*=stream]: {sw}, main: {m})", {
-      sl: !!streamList,
-      sw: !!streamWild,
-      m: !!main,
-    });
+    // log.debug("Feed container not found (stream__list: {sl}, [class*=stream]: {sw}, main: {m})", {
+    //   sl: !!streamList,
+    //   sw: !!streamWild,
+    //   m: !!main,
+    // });
     return false;
   }
 
-  log.debug("Feed container found: {tag}.{cls}", { tag: feedContainer.tagName, cls: feedContainer.className });
+  log.debug("Feed container found: {tag}.{cls}", {
+    tag: feedContainer.tagName,
+    cls: feedContainer.className,
+  });
 
   const bar = createFilterBar();
   feedContainer.parentElement?.insertBefore(bar, feedContainer);
@@ -238,28 +243,27 @@ function injectFilterUI(): boolean {
   return true;
 }
 
-// SPA-aware injection
-let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+// SPA-aware injection: observe DOM continuously, no debounce.
+// injectFilterUI short-circuits via getElementById when bar already exists, so the
+// per-mutation cost is negligible. This avoids needing to detect SPA navigation
+// (history.pushState can't be intercepted from the content script's isolated world).
+
+function isFeedPage(): boolean {
+  return location.pathname === "/" || location.pathname.includes("/feed");
+}
 
 const observer = new MutationObserver(() => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    log.debug("MutationObserver fired, pathname: {path}", { path: location.pathname });
-    if (location.pathname === "/" || location.pathname.includes("/feed")) {
-      injectFilterUI();
-    } else {
-      log.debug("Not on feed page, skipping injection");
-    }
-  }, 200);
+  if (isFeedPage()) injectFilterUI();
 });
 
-if (document.body) {
-  log.debug("document.body available at script init, observing immediately");
+function startObserving(): void {
   observer.observe(document.body, { childList: true, subtree: true });
+  // Immediate attempt — container may already exist
+  if (isFeedPage()) injectFilterUI();
+}
+
+if (document.body) {
+  startObserving();
 } else {
-  log.debug("document.body not available, deferring observer to DOMContentLoaded");
-  document.addEventListener("DOMContentLoaded", () => {
-    log.debug("DOMContentLoaded fired, starting observer");
-    observer.observe(document.body, { childList: true, subtree: true });
-  });
+  document.addEventListener("DOMContentLoaded", () => startObserving());
 }
