@@ -1,6 +1,6 @@
-# SoundCloud Feed Filter
+# Better SoundCloud Feed
 
-Chrome/Edge extension (MV3) that filters your SoundCloud feed by content type, artist, and genre/tags. Intercepts `api-v2.soundcloud.com/stream` API calls and strips items from the response before SoundCloud renders them.
+Chrome/Edge extension (Manifest V3) that filters your SoundCloud feed. Intercepts `api-v2.soundcloud.com/stream` API calls and filters items from the response before SoundCloud renders them.
 
 ## Quick start
 
@@ -21,44 +21,57 @@ Navigate to [soundcloud.com](https://soundcloud.com/) — a filter bar appears a
 ## Development
 
 ```bash
-pnpm dev          # Build in watch mode — rebuild on save
-pnpm test         # Run unit tests (Vitest)
-pnpm check        # Type check + lint (Oxlint)
-pnpm fmt          # Format (Oxfmt)
+pnpm dev          # Build in watch mode
+pnpm build        # Production build
+pnpm test         # Unit tests (Vitest)
+pnpm check        # Lint (Oxlint) + format check (Oxfmt)
+pnpm typecheck    # TypeScript strict mode
 ```
 
-After `pnpm dev` rebuilds, reload the extension in `edge://extensions` to pick up changes.
+After rebuilds, reload the extension in the browser to pick up changes.
 
 ## Filters
 
-| Filter                  | Behavior                                                                                                                                           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Content type**        | Checkboxes to show/hide tracks, track reposts, playlists, playlist reposts                                                                         |
-| **Exclude artists**     | Comma-separated permalinks — hides items by artist or reposter                                                                                     |
-| **Genre/tag whitelist** | Comma-separated terms — if any specified, only shows items matching at least one (case-insensitive substring match against `genre` and `tag_list`) |
+| Filter                | Behavior                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Activity types**    | Checkboxes for track posts, track reposts, and playlist posts. Controls the `activityTypes` query param at the API level — unchecked types are never fetched. |
+| **Search (simple)**   | Single input matching against all fields (title, description, genre, artist, label).                                                                          |
+| **Search (extended)** | Per-field inputs: title, description, genre, artist, label. Only non-empty fields are checked.                                                                |
+| **Search syntax**     | Comma-separated terms, `-exclude` prefix, `*wildcard` globs, case-insensitive. AND/OR operator toggle.                                                        |
+| **Duration**          | Min/max in minutes. Applies to tracks only (not playlist totals).                                                                                             |
 
-Filter state persists via `chrome.storage.local`.
+Filters are persisted in `chrome.storage.local` and mirrored to `localStorage` for sync access from the page context. Changes only take effect when the user clicks **Apply** or **Apply & Reload**.
 
 ## How it works
 
-1. A content script injects `injected.js` into the page context at `document_start`
-2. `injected.js` monkey-patches `window.fetch` (and `XMLHttpRequest` as fallback)
-3. API responses from `/stream` and `/feed` endpoints are intercepted, filtered through pure functions, and returned to SoundCloud's JS
-4. A MutationObserver watches for SPA route changes and injects the filter UI when the feed page loads
+1. A content script injects `injected.js` into the page context
+2. `injected.js` monkey-patches `window.fetch` and `XMLHttpRequest`
+3. API responses from `/stream` and `/feed` endpoints are intercepted, filtered, and returned to SoundCloud's JS
+4. The content script and injected script communicate via `window.postMessage`
+5. A MutationObserver watches for SPA route changes and injects the filter UI when the feed page loads
 
 ## Project structure
 
 ```
 src/
-├── types.ts            SC API shapes, filter state, message types
-├── filters.ts          Pure filter logic (matchesFilters, filterStreamResponse)
-├── filters.test.ts     Filter tests
-├── storage.ts          Typed chrome.storage.local wrapper (injectable backend)
-├── storage.test.ts     Storage tests
-├── url.ts              URL helpers (isStreamUrl, extractUrl, withLimit)
-├── url.test.ts         URL tests
-├── test-factories.ts   Typed factory functions for test fixtures
-├── content-script.ts   Entry: injects page script, mounts filter UI, bridges messages
-├── injected.ts         Entry: page-context fetch/XHR patch
-└── filter-ui.css       Filter bar styles
+├── content-script/     # UI injection, chrome.storage, DOM interaction
+│   ├── index.ts        # Entry: injects page script, mounts filter UI, bridges messages
+│   ├── filter-bar.ts   # Filter bar creation, read/restore state, event wiring
+│   └── help-modal.ts   # Help dialog
+├── injected/           # Runs in page context (main world)
+│   ├── index.ts        # Entry: fetch/XHR patching, message listener
+│   └── intercept.ts    # Fetch and XHR interception + response filtering
+├── shared/             # Shared between both entry points
+│   ├── types.ts        # SC API types (PartialDeep), filter state, message protocol
+│   ├── filters.ts      # Pure filter logic (matchesFilters, filterStreamResponse)
+│   ├── search.ts       # Search string parsing, field extractors
+│   ├── storage.ts      # chrome.storage.local + localStorage sync
+│   ├── url.ts          # URL helpers (isStreamUrl, extractUrl, withActivityTypes)
+│   └── logger.ts       # LogTape configuration
+└── test/
+    └── factories.ts    # Typed factory functions for test fixtures
 ```
+
+## License
+
+[MIT](LICENSE)
