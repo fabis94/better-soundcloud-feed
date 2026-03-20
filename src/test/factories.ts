@@ -125,20 +125,28 @@ export function buildStreamItem(overrides: Partial<SCStreamItem> = {}): SCStream
   return { ...base, ...overrides };
 }
 
-export function buildStreamResponse(overrides: Partial<SCStreamResponse> = {}): SCStreamResponse {
+export function buildStreamResponse(overrides: Record<string, unknown> = {}): SCStreamResponse {
   return {
     collection: [buildStreamItem()],
     next_href: null,
     query_urn: null,
     ...overrides,
-  };
+  } as SCStreamResponse;
 }
 
 export function buildFilters(overrides: Partial<FilterState> = {}): FilterState {
   return {
-    types: ["track", "track-repost", "playlist", "playlist-repost"],
-    excludeArtists: [],
-    genres: [],
+    activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
+    searchMode: "simple",
+    searchString: "",
+    searchTitle: "",
+    searchDescription: "",
+    searchGenre: "",
+    searchArtist: "",
+    searchLabel: "",
+    searchOperator: "and",
+    minDurationSeconds: null,
+    maxDurationSeconds: null,
     ...overrides,
   };
 }

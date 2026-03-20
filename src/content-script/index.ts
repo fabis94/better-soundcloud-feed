@@ -1,4 +1,4 @@
-import type { FilterState, FilterUpdateMessage } from "../shared/types";
+import type { FilterState, FilterUpdateMessage, SCActivityType } from "../shared/types";
 import { createChromeFilterStorage } from "../shared/storage";
 import { createLogger } from "../shared/logger";
 
@@ -20,32 +20,42 @@ function sendFilters(filters: FilterState): void {
   window.postMessage(msg, "*");
 }
 
-function parseCommaSeparated(value: string): string[] {
-  return value
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 function createFilterBar(): HTMLElement {
   const bar = document.createElement("div");
   bar.id = FILTER_BAR_ID;
 
   bar.innerHTML = `
     <div class="scf-row">
-      <label class="scf-label">Types:</label>
-      <label class="scf-check"><input type="checkbox" data-type="track" checked> Tracks</label>
-      <label class="scf-check"><input type="checkbox" data-type="track-repost" checked> Track Reposts</label>
-      <label class="scf-check"><input type="checkbox" data-type="playlist" checked> Playlists</label>
-      <label class="scf-check"><input type="checkbox" data-type="playlist-repost" checked> Playlist Reposts</label>
+      <label class="scf-label">Show:</label>
+      <label class="scf-check"><input type="checkbox" data-activity="TrackPost" checked> Tracks</label>
+      <label class="scf-check"><input type="checkbox" data-activity="TrackRepost" checked> Reposts</label>
+      <label class="scf-check"><input type="checkbox" data-activity="PlaylistPost" checked> Playlists</label>
     </div>
     <div class="scf-row">
-      <label class="scf-label">Exclude artists:</label>
-      <input type="text" class="scf-input" id="scf-exclude-artists" placeholder="comma-separated permalinks">
+      <label class="scf-label">Search:</label>
+      <div class="scf-pill" id="scf-operator">
+        <button type="button" class="scf-pill-btn scf-pill-active" data-op="and">All</button>
+        <button type="button" class="scf-pill-btn" data-op="or">Any</button>
+      </div>
+      <div class="scf-search-simple">
+        <input type="text" class="scf-input" id="scf-search" placeholder="filter by title, artist, genre, label... (comma-separated, -exclude, wild*card)">
+      </div>
+      <div class="scf-search-extended" style="display:none">
+        <div class="scf-ext-row"><label class="scf-ext-label">Title</label><input type="text" class="scf-input" id="scf-search-title" placeholder="title filter"></div>
+        <div class="scf-ext-row"><label class="scf-ext-label">Description</label><input type="text" class="scf-input" id="scf-search-desc" placeholder="description filter"></div>
+        <div class="scf-ext-row"><label class="scf-ext-label">Genre</label><input type="text" class="scf-input" id="scf-search-genre" placeholder="genre filter"></div>
+        <div class="scf-ext-row"><label class="scf-ext-label">Artist</label><input type="text" class="scf-input" id="scf-search-artist" placeholder="artist/reposter filter"></div>
+        <div class="scf-ext-row"><label class="scf-ext-label">Label</label><input type="text" class="scf-input" id="scf-search-label" placeholder="label/publisher filter"></div>
+      </div>
+      <a href="#" class="scf-toggle" id="scf-mode-toggle">Extended</a>
     </div>
     <div class="scf-row">
-      <label class="scf-label">Genres/tags:</label>
-      <input type="text" class="scf-input" id="scf-genres" placeholder="comma-separated (whitelist, leave empty for all)">
+      <label class="scf-label">Duration:</label>
+      <label class="scf-duration-label">Min</label>
+      <input type="number" class="scf-input scf-input-small" id="scf-min-duration" placeholder="min" min="0" step="0.5">
+      <label class="scf-duration-label">Max</label>
+      <input type="number" class="scf-input scf-input-small" id="scf-max-duration" placeholder="min" min="0" step="0.5">
+      <span class="scf-hint">(minutes)</span>
     </div>
   `;
 
@@ -53,18 +63,46 @@ function createFilterBar(): HTMLElement {
 }
 
 function readFiltersFromUI(bar: HTMLElement): FilterState {
-  const checkboxes = bar.querySelectorAll<HTMLInputElement>("input[data-type]");
-  const types: FilterState["types"] = Array.from(checkboxes)
+  // Activity types
+  const activityCheckboxes = bar.querySelectorAll<HTMLInputElement>("input[data-activity]");
+  const activityTypes = Array.from(activityCheckboxes)
     .filter((cb) => cb.checked)
-    .map((cb) => cb.dataset["type"] as FilterState["types"][number]);
+    .map((cb) => cb.dataset["activity"] as SCActivityType);
 
-  const excludeInput = bar.querySelector<HTMLInputElement>("#scf-exclude-artists")!;
-  const genresInput = bar.querySelector<HTMLInputElement>("#scf-genres")!;
+  // Search operator
+  const activeBtn = bar.querySelector<HTMLElement>(".scf-pill-btn.scf-pill-active");
+  const searchOperator = (activeBtn?.dataset["op"] === "or" ? "or" : "and") as FilterState["searchOperator"];
+
+  // Search mode
+  const isExtended = bar.querySelector<HTMLElement>(".scf-search-extended")!.style.display !== "none";
+  const searchMode: FilterState["searchMode"] = isExtended ? "extended" : "simple";
+
+  // Search values
+  const searchString = bar.querySelector<HTMLInputElement>("#scf-search")?.value ?? "";
+  const searchTitle = bar.querySelector<HTMLInputElement>("#scf-search-title")?.value ?? "";
+  const searchDescription = bar.querySelector<HTMLInputElement>("#scf-search-desc")?.value ?? "";
+  const searchGenre = bar.querySelector<HTMLInputElement>("#scf-search-genre")?.value ?? "";
+  const searchArtist = bar.querySelector<HTMLInputElement>("#scf-search-artist")?.value ?? "";
+  const searchLabel = bar.querySelector<HTMLInputElement>("#scf-search-label")?.value ?? "";
+
+  // Duration (UI is in minutes, store in seconds)
+  const minRaw = bar.querySelector<HTMLInputElement>("#scf-min-duration")?.value;
+  const maxRaw = bar.querySelector<HTMLInputElement>("#scf-max-duration")?.value;
+  const minDurationSeconds = minRaw ? parseFloat(minRaw) * 60 : null;
+  const maxDurationSeconds = maxRaw ? parseFloat(maxRaw) * 60 : null;
 
   return {
-    types,
-    excludeArtists: parseCommaSeparated(excludeInput.value),
-    genres: parseCommaSeparated(genresInput.value),
+    activityTypes,
+    searchMode,
+    searchString,
+    searchTitle,
+    searchDescription,
+    searchGenre,
+    searchArtist,
+    searchLabel,
+    searchOperator,
+    minDurationSeconds,
+    maxDurationSeconds,
   };
 }
 
@@ -77,21 +115,76 @@ function applyFiltersFromUI(bar: HTMLElement): void {
 async function restoreFiltersToUI(bar: HTMLElement): Promise<void> {
   const filters = await storage.load();
 
-  // Restore type checkboxes
-  const checkboxes = bar.querySelectorAll<HTMLInputElement>("input[data-type]");
-  for (const cb of checkboxes) {
-    cb.checked = filters.types.includes(cb.dataset["type"] as FilterState["types"][number]);
+  // Activity type checkboxes
+  const activityCheckboxes = bar.querySelectorAll<HTMLInputElement>("input[data-activity]");
+  for (const cb of activityCheckboxes) {
+    cb.checked = filters.activityTypes.includes(cb.dataset["activity"] as SCActivityType);
   }
 
-  // Restore text inputs
-  const excludeInput = bar.querySelector<HTMLInputElement>("#scf-exclude-artists")!;
-  excludeInput.value = filters.excludeArtists.join(", ");
+  // Operator pill
+  const pillBtns = bar.querySelectorAll<HTMLElement>(".scf-pill-btn");
+  for (const btn of pillBtns) {
+    btn.classList.toggle("scf-pill-active", btn.dataset["op"] === filters.searchOperator);
+  }
 
-  const genresInput = bar.querySelector<HTMLInputElement>("#scf-genres")!;
-  genresInput.value = filters.genres.join(", ");
+  // Search mode
+  const simpleContainer = bar.querySelector<HTMLElement>(".scf-search-simple")!;
+  const extendedContainer = bar.querySelector<HTMLElement>(".scf-search-extended")!;
+  const modeToggle = bar.querySelector<HTMLElement>("#scf-mode-toggle")!;
+  if (filters.searchMode === "extended") {
+    simpleContainer.style.display = "none";
+    extendedContainer.style.display = "block";
+    modeToggle.textContent = "Simple";
+  } else {
+    simpleContainer.style.display = "block";
+    extendedContainer.style.display = "none";
+    modeToggle.textContent = "Extended";
+  }
 
-  // Push initial filters to injected script
+  // Search values
+  bar.querySelector<HTMLInputElement>("#scf-search")!.value = filters.searchString;
+  bar.querySelector<HTMLInputElement>("#scf-search-title")!.value = filters.searchTitle;
+  bar.querySelector<HTMLInputElement>("#scf-search-desc")!.value = filters.searchDescription;
+  bar.querySelector<HTMLInputElement>("#scf-search-genre")!.value = filters.searchGenre;
+  bar.querySelector<HTMLInputElement>("#scf-search-artist")!.value = filters.searchArtist;
+  bar.querySelector<HTMLInputElement>("#scf-search-label")!.value = filters.searchLabel;
+
+  // Duration (stored in seconds, display in minutes)
+  bar.querySelector<HTMLInputElement>("#scf-min-duration")!.value =
+    filters.minDurationSeconds != null ? String(filters.minDurationSeconds / 60) : "";
+  bar.querySelector<HTMLInputElement>("#scf-max-duration")!.value =
+    filters.maxDurationSeconds != null ? String(filters.maxDurationSeconds / 60) : "";
+
   sendFilters(filters);
+}
+
+function wireUpInteractions(bar: HTMLElement): void {
+  // Mode toggle
+  const modeToggle = bar.querySelector<HTMLElement>("#scf-mode-toggle")!;
+  modeToggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    const simpleContainer = bar.querySelector<HTMLElement>(".scf-search-simple")!;
+    const extendedContainer = bar.querySelector<HTMLElement>(".scf-search-extended")!;
+    const isSimple = simpleContainer.style.display !== "none";
+    simpleContainer.style.display = isSimple ? "none" : "block";
+    extendedContainer.style.display = isSimple ? "block" : "none";
+    modeToggle.textContent = isSimple ? "Simple" : "Extended";
+    applyFiltersFromUI(bar);
+  });
+
+  // Operator pill toggle
+  const pillBtns = bar.querySelectorAll<HTMLElement>(".scf-pill-btn");
+  for (const btn of pillBtns) {
+    btn.addEventListener("click", () => {
+      for (const b of pillBtns) b.classList.remove("scf-pill-active");
+      btn.classList.add("scf-pill-active");
+      applyFiltersFromUI(bar);
+    });
+  }
+
+  // All inputs
+  bar.addEventListener("change", () => applyFiltersFromUI(bar));
+  bar.addEventListener("input", () => applyFiltersFromUI(bar));
 }
 
 function injectFilterUI(): boolean {
@@ -100,14 +193,17 @@ function injectFilterUI(): boolean {
     return true;
   }
 
-  // Find SC's feed container — try known selectors
   const streamList = document.querySelector(".stream__list");
   const streamWild = document.querySelector('[class*="stream"]');
   const main = document.querySelector("main");
   const feedContainer = streamList ?? streamWild ?? main;
 
   if (!feedContainer) {
-    log.debug("Feed container not found (stream__list: {sl}, [class*=stream]: {sw}, main: {m})", { sl: !!streamList, sw: !!streamWild, m: !!main });
+    log.debug("Feed container not found (stream__list: {sl}, [class*=stream]: {sw}, main: {m})", {
+      sl: !!streamList,
+      sw: !!streamWild,
+      m: !!main,
+    });
     return false;
   }
 
@@ -117,15 +213,12 @@ function injectFilterUI(): boolean {
   feedContainer.parentElement?.insertBefore(bar, feedContainer);
   log.debug("Filter bar injected into DOM");
 
-  // Restore saved state and wire up change handlers
   restoreFiltersToUI(bar);
-
-  bar.addEventListener("change", () => applyFiltersFromUI(bar));
-  bar.addEventListener("input", () => applyFiltersFromUI(bar));
+  wireUpInteractions(bar);
   return true;
 }
 
-// SPA-aware injection: watch for route changes / DOM mutations
+// SPA-aware injection
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 const observer = new MutationObserver(() => {

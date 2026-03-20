@@ -1,10 +1,26 @@
-import { configureSync, getConsoleSink, getLogger } from "@logtape/logtape";
+import type { LogRecord } from "@logtape/logtape";
+import {
+  configureSync,
+  defaultConsoleFormatter,
+  getConsoleSink,
+  getLogger,
+} from "@logtape/logtape";
 
 declare const __DEV__: boolean;
 
+/** Extends default formatter to append properties as an expandable object. */
+function consoleFormatter(record: LogRecord): readonly unknown[] {
+  const base = defaultConsoleFormatter(record);
+  const props = record.properties;
+  if (Object.keys(props).length > 0) {
+    return [...base, props];
+  }
+  return base;
+}
+
 configureSync({
   sinks: {
-    console: getConsoleSink(),
+    console: getConsoleSink({ formatter: consoleFormatter }),
   },
   loggers: [
     {
@@ -19,9 +35,6 @@ configureSync({
     },
   ],
 });
-
-const rootLogger = getLogger(["sc-feed-filter"]);
-rootLogger.info("SC Feed Filter started (mode: {mode})", { mode: __DEV__ ? "dev" : "prod" });
 
 export function createLogger(name: string) {
   return getLogger(["sc-feed-filter", name]);

@@ -1,13 +1,15 @@
-// --- SC API response types ---
+import type { PartialDeep } from "type-fest";
 
-export interface SCBadges {
+// --- SC API response types (raw, fully typed for documentation) ---
+
+interface SCRawBadges {
   pro: boolean;
   creator_mid_tier: boolean;
   pro_unlimited: boolean;
   verified: boolean;
 }
 
-export interface SCUser {
+interface SCRawUser {
   avatar_url: string;
   first_name: string;
   followers_count: number;
@@ -24,27 +26,27 @@ export interface SCUser {
   verified: boolean;
   city: string | null;
   country_code: string | null;
-  badges: SCBadges;
+  badges: SCRawBadges;
   station_urn: string;
   station_permalink: string;
 }
 
-export interface SCTranscodingFormat {
+interface SCRawTranscodingFormat {
   protocol: "hls" | "progressive";
   mime_type: string;
 }
 
-export interface SCTranscoding {
+interface SCRawTranscoding {
   url: string;
   preset: string;
   duration: number;
   snipped: boolean;
-  format: SCTranscodingFormat;
+  format: SCRawTranscodingFormat;
   quality: string;
   is_legacy_transcoding: boolean;
 }
 
-export interface SCPublisherMetadata {
+interface SCRawPublisherMetadata {
   id: number;
   urn: string;
   artist: string;
@@ -53,7 +55,7 @@ export interface SCPublisherMetadata {
   explicit: boolean;
 }
 
-export interface SCTrack {
+interface SCRawTrack {
   artwork_url: string | null;
   caption: string | null;
   commentable: boolean;
@@ -77,7 +79,7 @@ export interface SCTrack {
   permalink_url: string;
   playback_count: number;
   public: boolean;
-  publisher_metadata: SCPublisherMetadata | null;
+  publisher_metadata: SCRawPublisherMetadata | null;
   purchase_title: string | null;
   purchase_url: string | null;
   release_date: string | null;
@@ -95,45 +97,55 @@ export interface SCTrack {
   waveform_url: string;
   display_date: string;
   media: {
-    transcodings: SCTranscoding[];
+    transcodings: SCRawTranscoding[];
   };
   station_urn: string;
   station_permalink: string;
   track_authorization: string;
   monetization_model: string;
   policy: string;
-  user: SCUser;
+  user: SCRawUser;
 }
 
-export interface SCPlaylist {
+interface SCRawPlaylist {
   id: number;
   title: string;
   genre: string;
   tag_list: string;
-  user: SCUser;
+  user: SCRawUser;
   track_count: number;
   duration: number;
   artwork_url: string | null;
   created_at: string;
 }
 
-export type SCStreamItemType = "track" | "track-repost" | "playlist" | "playlist-repost";
-
-export interface SCStreamItem {
+interface SCRawStreamItem {
   created_at: string;
-  type: SCStreamItemType;
-  user: SCUser;
+  type: string;
+  user: SCRawUser;
   uuid: string;
   caption: string | null;
-  track?: SCTrack;
-  playlist?: SCPlaylist;
+  track?: SCRawTrack;
+  playlist?: SCRawPlaylist;
 }
 
-export interface SCStreamResponse {
-  collection: SCStreamItem[];
+interface SCRawStreamResponse {
+  collection: SCRawStreamItem[];
   next_href: string | null;
   query_urn: string | null;
 }
+
+// --- Exported deeply partial types (SC can change their API at any time) ---
+
+export type SCBadges = PartialDeep<SCRawBadges>;
+export type SCUser = PartialDeep<SCRawUser>;
+export type SCTranscodingFormat = PartialDeep<SCRawTranscodingFormat>;
+export type SCTranscoding = PartialDeep<SCRawTranscoding>;
+export type SCPublisherMetadata = PartialDeep<SCRawPublisherMetadata>;
+export type SCTrack = PartialDeep<SCRawTrack>;
+export type SCPlaylist = PartialDeep<SCRawPlaylist>;
+export type SCStreamItem = PartialDeep<SCRawStreamItem>;
+export type SCStreamResponse = PartialDeep<SCRawStreamResponse>;
 
 // --- Stream endpoint query params ---
 
@@ -158,9 +170,17 @@ export interface SCStreamParams {
 // --- Filter types ---
 
 export interface FilterState {
-  types: SCStreamItemType[];
-  excludeArtists: string[];
-  genres: string[];
+  activityTypes: SCActivityType[];
+  searchMode: "simple" | "extended";
+  searchString: string;
+  searchTitle: string;
+  searchDescription: string;
+  searchGenre: string;
+  searchArtist: string;
+  searchLabel: string;
+  searchOperator: "and" | "or";
+  minDurationSeconds: number | null;
+  maxDurationSeconds: number | null;
 }
 
 // --- Message protocol ---

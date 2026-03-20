@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@voidzero-dev/vite-plus-test";
-import { isStreamUrl, extractUrl, withLimit } from "./url";
+import { isStreamUrl, extractUrl, withLimit, withActivityTypes } from "./url";
 
 describe("isStreamUrl", () => {
   it("matches stream API URLs", () => {
@@ -41,5 +41,45 @@ describe("withLimit", () => {
     const result = withLimit("https://api-v2.soundcloud.com/stream", 50);
     const parsed = new URL(result);
     expect(parsed.searchParams.get("limit")).toBe("50");
+  });
+});
+
+describe("withActivityTypes", () => {
+  it("sets activity types on a URL", () => {
+    const result = withActivityTypes("https://api-v2.soundcloud.com/stream", ["TrackPost", "TrackRepost"]);
+    const parsed = new URL(result);
+    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["TrackPost", "TrackRepost"]);
+  });
+
+  it("replaces existing activity types", () => {
+    const result = withActivityTypes(
+      "https://api-v2.soundcloud.com/stream?activityTypes=PlaylistPost",
+      ["TrackPost"],
+    );
+    const parsed = new URL(result);
+    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["TrackPost"]);
+  });
+
+  it("handles single activity type", () => {
+    const result = withActivityTypes("https://api-v2.soundcloud.com/stream", ["PlaylistPost"]);
+    const parsed = new URL(result);
+    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["PlaylistPost"]);
+  });
+
+  it("removes all activity types when array is empty", () => {
+    const result = withActivityTypes(
+      "https://api-v2.soundcloud.com/stream?activityTypes=TrackPost",
+      [],
+    );
+    const parsed = new URL(result);
+    expect(parsed.searchParams.getAll("activityTypes")).toEqual([]);
+  });
+
+  it("preserves other query params", () => {
+    const result = withActivityTypes("https://api-v2.soundcloud.com/stream?limit=20&offset=0", ["TrackPost"]);
+    const parsed = new URL(result);
+    expect(parsed.searchParams.get("limit")).toBe("20");
+    expect(parsed.searchParams.get("offset")).toBe("0");
+    expect(parsed.searchParams.getAll("activityTypes")).toEqual(["TrackPost"]);
   });
 });

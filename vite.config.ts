@@ -1,33 +1,67 @@
 import { defineConfig } from "vite-plus";
 import { resolve } from "node:path";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 
 const isDev = process.argv.includes("--watch");
 
-const input: Record<string, string> = {
-  "content-script": resolve(__dirname, "src/content-script/index.ts"),
-  injected: resolve(__dirname, "src/injected/index.ts"),
+const iife = {
+  sourcemap: true as const,
+  target: "chrome120" as const,
 };
-
-if (isDev) {
-  input.background = resolve(__dirname, "src/hotreload/index.ts");
-}
 
 export default defineConfig({
   define: {
     __DEV__: JSON.stringify(isDev),
   },
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-    sourcemap: true,
-    target: "chrome120",
-    rollupOptions: {
-      input,
-      output: {
-        format: "es",
-        entryFileNames: "[name].js",
+  environments: {
+    client: {
+      build: {
+        outDir: "dist",
+        emptyOutDir: false,
+        ...iife,
+        rolldownOptions: {
+          input: { "content-script": resolve(__dirname, "src/content-script/index.ts") },
+          output: { format: "iife", entryFileNames: "[name].js" },
+        },
       },
+    },
+    injected: {
+      consumer: "client",
+      build: {
+        outDir: "dist",
+        emptyOutDir: false,
+        ...iife,
+        rolldownOptions: {
+          input: { injected: resolve(__dirname, "src/injected/index.ts") },
+          output: { format: "iife", entryFileNames: "[name].js" },
+        },
+      },
+    },
+    ...(isDev
+      ? {
+          hotreload: {
+            consumer: "client",
+            build: {
+              outDir: "dist",
+              emptyOutDir: false,
+              ...iife,
+              rolldownOptions: {
+                input: { background: resolve(__dirname, "src/hotreload/index.ts") },
+                output: { format: "es" as const, entryFileNames: "[name].js" },
+              },
+            },
+          },
+        }
+      : {}),
+  },
+  builder: {
+    async buildApp(builder) {
+      // Clean dist once before building all environments
+      rmSync("dist", { recursive: true, force: true });
+      mkdirSync("dist", { recursive: true });
+      for (const env of Object.values(builder.environments)) {
+        await builder.build(env);
+      }
     },
   },
   plugins: [

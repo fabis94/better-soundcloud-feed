@@ -1,3 +1,8 @@
+/* Hide SC's built-in reposts filter */
+div.stream__filter {
+  display: none !important;
+}
+
 #sc-feed-filter-bar {
   background: #111;
   border: 1px solid #333;
@@ -22,7 +27,7 @@
 .scf-label {
   font-weight: 600;
   color: #f50;
-  min-width: 100px;
+  min-width: 70px;
   flex-shrink: 0;
 }
 
@@ -58,4 +63,95 @@
 
 .scf-input::placeholder {
   color: #666;
+}
+
+/* Duration inputs */
+.scf-input-small {
+  flex: 0 0 auto;
+  min-width: 70px;
+  max-width: 80px;
+}
+
+.scf-duration-label {
+  color: #999;
+  font-size: 12px;
+}
+
+.scf-hint {
+  color: #666;
+  font-size: 12px;
+}
+
+/* Search mode toggle link */
+.scf-toggle {
+  color: #f50;
+  text-decoration: none;
+  font-size: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.scf-toggle:hover {
+  text-decoration: underline;
+}
+
+/* Simple/Extended search containers */
+.scf-search-simple {
+  flex: 1;
+  display: flex;
+  min-width: 200px;
+}
+
+.scf-search-extended {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+}
+
+.scf-ext-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scf-ext-label {
+  color: #999;
+  font-size: 12px;
+  min-width: 75px;
+  flex-shrink: 0;
+}
+
+/* AND/OR pill toggle */
+.scf-pill {
+  display: inline-flex;
+  border: 1px solid #444;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.scf-pill-btn {
+  background: #1a1a1a;
+  border: none;
+  color: #999;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.scf-pill-btn:not(:last-child) {
+  border-right: 1px solid #444;
+}
+
+.scf-pill-btn.scf-pill-active {
+  background: #f50;
+  color: #fff;
+}
+
+.scf-pill-btn:hover:not(.scf-pill-active) {
+  background: #2a2a2a;
 }

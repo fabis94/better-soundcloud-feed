@@ -1,3 +1,5 @@
+import type { SCActivityType } from "./types";
+
 const STREAM_RE = /api-v2\.soundcloud\.com\/(stream|feed)/;
 
 /** Check if a URL is a SoundCloud stream/feed API call. */
@@ -15,5 +17,15 @@ export function extractUrl(input: RequestInfo | URL): string {
 export function withLimit(url: string, limit: number): string {
   const parsed = new URL(url);
   parsed.searchParams.set("limit", String(limit));
+  return parsed.toString();
+}
+
+/** Set activityTypes query params on a URL. */
+export function withActivityTypes(url: string, activityTypes: SCActivityType[]): string {
+  const parsed = new URL(url);
+  parsed.searchParams.delete("activityTypes");
+  for (const t of activityTypes) {
+    parsed.searchParams.append("activityTypes", t);
+  }
   return parsed.toString();
 }
