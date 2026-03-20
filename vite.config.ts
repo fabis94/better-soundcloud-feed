@@ -1,6 +1,6 @@
 import { defineConfig } from "vite-plus";
 import { resolve } from "node:path";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, rmSync } from "node:fs";
 
 const isDev = process.argv.includes("--watch");
 
@@ -37,22 +37,6 @@ export default defineConfig({
         },
       },
     },
-    ...(isDev
-      ? {
-          hotreload: {
-            consumer: "client",
-            build: {
-              outDir: "dist",
-              emptyOutDir: false,
-              ...iife,
-              rolldownOptions: {
-                input: { background: resolve(__dirname, "src/hotreload/index.ts") },
-                output: { format: "es" as const, entryFileNames: "[name].js" },
-              },
-            },
-          },
-        }
-      : {}),
   },
   builder: {
     async buildApp(builder) {
@@ -76,14 +60,7 @@ export default defineConfig({
         mkdirSync("dist", { recursive: true });
         copyFileSync("src/content-script/filter-ui.css", "dist/filter-ui.css");
 
-        const manifest = JSON.parse(readFileSync("manifest.json", "utf-8"));
-        if (isDev) {
-          manifest.background = {
-            service_worker: "background.js",
-            type: "module",
-          };
-        }
-        writeFileSync("dist/manifest.json", JSON.stringify(manifest, null, 2));
+        copyFileSync("manifest.json", "dist/manifest.json");
       },
     },
   ],

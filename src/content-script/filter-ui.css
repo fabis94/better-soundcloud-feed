@@ -144,32 +144,18 @@ div.stream__filter {
   font-size: var(--typography-micro-font-size);
 }
 
-/* Search mode toggle link */
-.scf-toggle {
-  color: var(--special-color);
-  text-decoration: none;
-  font-size: var(--typography-micro-font-size);
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.scf-toggle:hover {
-  text-decoration: underline;
-}
-
 /* Simple/Extended search containers */
 .scf-search-simple {
   flex: 1;
   display: flex;
-  min-width: 200px;
+  min-width: 0;
 }
 
 .scf-search-extended {
-  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-0_5x);
-  min-width: 200px;
 }
 
 .scf-ext-row {
@@ -180,9 +166,46 @@ div.stream__filter {
 
 .scf-ext-label {
   color: var(--secondary-color);
-  font-size: var(--typography-micro-font-size);
-  min-width: 75px;
+  font-size: var(--typography-captions-font-size);
+  min-width: 80px;
   flex-shrink: 0;
+}
+
+/* Actions row */
+.scf-actions {
+  display: flex;
+  gap: var(--spacing-1x);
+  padding-top: var(--spacing-0_5x);
+}
+
+/* Buttons */
+.scf-btn {
+  border: none;
+  border-radius: var(--borderRadiuses-4);
+  padding: var(--spacing-0_75x) var(--spacing-2x);
+  font-family: inherit;
+  font-size: var(--typography-captions-font-size);
+  font-weight: var(--typography-heading5-font-weight);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.scf-btn:hover {
+  opacity: 0.8;
+}
+
+.scf-btn:active {
+  opacity: 0.6;
+}
+
+.scf-btn-primary {
+  background: var(--special-color);
+  color: var(--white-color);
+}
+
+.scf-btn-secondary {
+  background: var(--highlight-color);
+  color: var(--primary-color);
 }
 
 /* AND/OR pill toggle */

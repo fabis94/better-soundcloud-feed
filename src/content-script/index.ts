@@ -1,5 +1,5 @@
 import type { FilterState, FilterUpdateMessage, SCActivityType } from "../shared/types";
-import { createChromeFilterStorage } from "../shared/storage";
+import { createChromeFilterStorage, DEFAULT_FILTERS } from "../shared/storage";
 import { createLogger } from "../shared/logger";
 
 const log = createLogger("content-script");
@@ -38,7 +38,7 @@ function createFilterBar(): HTMLElement {
         <button type="button" class="scf-pill-btn" data-op="or">Any</button>
       </div>
       <div class="scf-search-simple">
-        <input type="text" class="scf-input" id="scf-search" placeholder="filter by title, artist, genre, label... (comma-separated, -exclude, wild*card)">
+        <input type="text" class="scf-input" id="scf-search" placeholder="comma-separated, -exclude, wild*card">
       </div>
       <div class="scf-search-extended" style="display:none">
         <div class="scf-ext-row"><label class="scf-ext-label">Title</label><input type="text" class="scf-input" id="scf-search-title" placeholder="title filter"></div>
@@ -47,7 +47,6 @@ function createFilterBar(): HTMLElement {
         <div class="scf-ext-row"><label class="scf-ext-label">Artist</label><input type="text" class="scf-input" id="scf-search-artist" placeholder="artist/reposter filter"></div>
         <div class="scf-ext-row"><label class="scf-ext-label">Label</label><input type="text" class="scf-input" id="scf-search-label" placeholder="label/publisher filter"></div>
       </div>
-      <a href="#" class="scf-toggle" id="scf-mode-toggle">Extended</a>
     </div>
     <div class="scf-row">
       <label class="scf-label">Duration:</label>
@@ -56,6 +55,12 @@ function createFilterBar(): HTMLElement {
       <label class="scf-duration-label">Max</label>
       <input type="number" class="scf-input scf-input-small" id="scf-max-duration" placeholder="min" min="0" step="0.5">
       <span class="scf-hint">(minutes)</span>
+    </div>
+    <div class="scf-actions">
+      <button type="button" class="scf-btn scf-btn-primary" id="scf-apply">Apply</button>
+      <button type="button" class="scf-btn scf-btn-primary" id="scf-apply-reload">Apply &amp; Reload</button>
+      <button type="button" class="scf-btn scf-btn-secondary" id="scf-mode-toggle">Extended Mode</button>
+      <button type="button" class="scf-btn scf-btn-secondary" id="scf-clear">Clear</button>
     </div>
   `;
 
@@ -112,8 +117,7 @@ function applyFiltersFromUI(bar: HTMLElement): void {
   storage.save(filters);
 }
 
-async function restoreFiltersToUI(bar: HTMLElement): Promise<void> {
-  const filters = await storage.load();
+function restoreFiltersToUI(bar: HTMLElement, filters: FilterState): void {
 
   // Activity type checkboxes
   const activityCheckboxes = bar.querySelectorAll<HTMLInputElement>("input[data-activity]");
@@ -133,12 +137,12 @@ async function restoreFiltersToUI(bar: HTMLElement): Promise<void> {
   const modeToggle = bar.querySelector<HTMLElement>("#scf-mode-toggle")!;
   if (filters.searchMode === "extended") {
     simpleContainer.style.display = "none";
-    extendedContainer.style.display = "block";
-    modeToggle.textContent = "Simple";
+    extendedContainer.style.display = "flex";
+    modeToggle.textContent = "Simple Mode";
   } else {
-    simpleContainer.style.display = "block";
+    simpleContainer.style.display = "flex";
     extendedContainer.style.display = "none";
-    modeToggle.textContent = "Extended";
+    modeToggle.textContent = "Extended Mode";
   }
 
   // Search values
@@ -154,37 +158,44 @@ async function restoreFiltersToUI(bar: HTMLElement): Promise<void> {
     filters.minDurationSeconds != null ? String(filters.minDurationSeconds / 60) : "";
   bar.querySelector<HTMLInputElement>("#scf-max-duration")!.value =
     filters.maxDurationSeconds != null ? String(filters.maxDurationSeconds / 60) : "";
-
-  sendFilters(filters);
 }
 
 function wireUpInteractions(bar: HTMLElement): void {
-  // Mode toggle
+  // Mode toggle (UI-only, doesn't apply filters)
   const modeToggle = bar.querySelector<HTMLElement>("#scf-mode-toggle")!;
-  modeToggle.addEventListener("click", (e) => {
-    e.preventDefault();
+  modeToggle.addEventListener("click", () => {
     const simpleContainer = bar.querySelector<HTMLElement>(".scf-search-simple")!;
     const extendedContainer = bar.querySelector<HTMLElement>(".scf-search-extended")!;
     const isSimple = simpleContainer.style.display !== "none";
-    simpleContainer.style.display = isSimple ? "none" : "block";
-    extendedContainer.style.display = isSimple ? "block" : "none";
-    modeToggle.textContent = isSimple ? "Simple" : "Extended";
-    applyFiltersFromUI(bar);
+    simpleContainer.style.display = isSimple ? "none" : "flex";
+    extendedContainer.style.display = isSimple ? "flex" : "none";
+    modeToggle.textContent = isSimple ? "Simple Mode" : "Extended Mode";
   });
 
-  // Operator pill toggle
+  // Operator pill toggle (UI-only, doesn't apply filters)
   const pillBtns = bar.querySelectorAll<HTMLElement>(".scf-pill-btn");
   for (const btn of pillBtns) {
     btn.addEventListener("click", () => {
       for (const b of pillBtns) b.classList.remove("scf-pill-active");
       btn.classList.add("scf-pill-active");
-      applyFiltersFromUI(bar);
     });
   }
 
-  // All inputs
-  bar.addEventListener("change", () => applyFiltersFromUI(bar));
-  bar.addEventListener("input", () => applyFiltersFromUI(bar));
+  // Apply: persist + send to injected script
+  bar.querySelector<HTMLElement>("#scf-apply")!.addEventListener("click", () => {
+    applyFiltersFromUI(bar);
+  });
+
+  // Apply & Reload: persist + reload page so first XHR uses new filters
+  bar.querySelector<HTMLElement>("#scf-apply-reload")!.addEventListener("click", () => {
+    applyFiltersFromUI(bar);
+    location.reload();
+  });
+
+  // Clear: reset UI to defaults
+  bar.querySelector<HTMLElement>("#scf-clear")!.addEventListener("click", () => {
+    restoreFiltersToUI(bar, DEFAULT_FILTERS);
+  });
 }
 
 function injectFilterUI(): boolean {
@@ -213,7 +224,9 @@ function injectFilterUI(): boolean {
   feedContainer.parentElement?.insertBefore(bar, feedContainer);
   log.debug("Filter bar injected into DOM");
 
-  restoreFiltersToUI(bar);
+  storage.load().then((filters) => {
+    restoreFiltersToUI(bar, filters);
+  });
   wireUpInteractions(bar);
   return true;
 }
