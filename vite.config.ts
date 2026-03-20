@@ -14,6 +14,9 @@ if (isDev) {
 }
 
 export default defineConfig({
+  define: {
+    __DEV__: JSON.stringify(isDev),
+  },
   build: {
     outDir: "dist",
     emptyOutDir: true,

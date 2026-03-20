@@ -21,5 +21,8 @@
     "overrides": {
       "vite": "npm:@voidzero-dev/vite-plus-core@latest"
     }
+  },
+  "dependencies": {
+    "@logtape/logtape": "^2.0.4"
   }
 }

@@ -1,5 +1,9 @@
 import type { FilterState, FilterUpdateMessage } from "./types";
 import { createChromeFilterStorage } from "./storage";
+import { createLogger } from "./logger";
+
+const log = createLogger("content-script");
+log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
 
 const FILTER_BAR_ID = "sc-feed-filter-bar";
 
@@ -91,18 +95,27 @@ async function restoreFiltersToUI(bar: HTMLElement): Promise<void> {
 }
 
 function injectFilterUI(): void {
-  if (document.getElementById(FILTER_BAR_ID)) return;
+  if (document.getElementById(FILTER_BAR_ID)) {
+    log.debug("Filter bar already injected, skipping");
+    return;
+  }
 
   // Find SC's feed container — try known selectors
-  const feedContainer =
-    document.querySelector(".stream__list") ??
-    document.querySelector('[class*="stream"]') ??
-    document.querySelector("main");
+  const streamList = document.querySelector(".stream__list");
+  const streamWild = document.querySelector('[class*="stream"]');
+  const main = document.querySelector("main");
+  const feedContainer = streamList ?? streamWild ?? main;
 
-  if (!feedContainer) return;
+  if (!feedContainer) {
+    log.debug("Feed container not found (stream__list: {sl}, [class*=stream]: {sw}, main: {m})", { sl: !!streamList, sw: !!streamWild, m: !!main });
+    return;
+  }
+
+  log.debug("Feed container found: {tag}.{cls}", { tag: feedContainer.tagName, cls: feedContainer.className });
 
   const bar = createFilterBar();
   feedContainer.parentElement?.insertBefore(bar, feedContainer);
+  log.debug("Filter bar injected into DOM");
 
   // Restore saved state and wire up change handlers
   restoreFiltersToUI(bar);
@@ -117,16 +130,22 @@ let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 const observer = new MutationObserver(() => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
+    log.debug("MutationObserver fired, pathname: {path}", { path: location.pathname });
     if (location.pathname === "/" || location.pathname.includes("/feed")) {
       injectFilterUI();
+    } else {
+      log.debug("Not on feed page, skipping injection");
     }
   }, 200);
 });
 
 if (document.body) {
+  log.debug("document.body available at script init, observing immediately");
   observer.observe(document.body, { childList: true, subtree: true });
 } else {
+  log.debug("document.body not available, deferring observer to DOMContentLoaded");
   document.addEventListener("DOMContentLoaded", () => {
+    log.debug("DOMContentLoaded fired, starting observer");
     observer.observe(document.body, { childList: true, subtree: true });
   });
 }
