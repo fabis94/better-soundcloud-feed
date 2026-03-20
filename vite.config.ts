@@ -67,6 +67,11 @@ export default defineConfig({
   plugins: [
     {
       name: "copy-extension-files",
+      buildStart() {
+        // Tell the watcher to watch these non-module files
+        this.addWatchFile(resolve(__dirname, "src/content-script/filter-ui.css"));
+        this.addWatchFile(resolve(__dirname, "manifest.json"));
+      },
       closeBundle() {
         mkdirSync("dist", { recursive: true });
         copyFileSync("src/content-script/filter-ui.css", "dist/filter-ui.css");
