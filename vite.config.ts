@@ -1,6 +1,6 @@
 import { defineConfig } from "vite-plus";
 import { resolve } from "node:path";
-import { copyFileSync, mkdirSync, rmSync } from "node:fs";
+import { cpSync, mkdirSync, rmSync } from "node:fs";
 
 const isDev = process.argv.includes("--watch");
 
@@ -50,17 +50,20 @@ export default defineConfig({
   },
   plugins: [
     {
-      name: "copy-extension-files",
+      name: "no-test-bundle",
+      resolveId(source) {
+        if (/\.test\./.test(source)) {
+          this.error(`Test file "${source}" must not be imported in production code`);
+        }
+      },
+    },
+    {
+      name: "copy-public",
       buildStart() {
-        // Tell the watcher to watch these non-module files
-        this.addWatchFile(resolve(__dirname, "src/content-script/filter-ui.css"));
-        this.addWatchFile(resolve(__dirname, "manifest.json"));
+        this.addWatchFile(resolve(__dirname, "public"));
       },
       closeBundle() {
-        mkdirSync("dist", { recursive: true });
-        copyFileSync("src/content-script/filter-ui.css", "dist/filter-ui.css");
-
-        copyFileSync("manifest.json", "dist/manifest.json");
+        cpSync("public", "dist", { recursive: true });
       },
     },
   ],
