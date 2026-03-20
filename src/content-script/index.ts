@@ -1,6 +1,7 @@
 import type { FilterState, FilterUpdateMessage, SCActivityType } from "../shared/types";
 import { createChromeFilterStorage, DEFAULT_FILTERS } from "../shared/storage";
 import { createLogger } from "../shared/logger";
+import { openHelpModal } from "./help-modal";
 
 const log = createLogger("content-script");
 log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
@@ -61,6 +62,7 @@ function createFilterBar(): HTMLElement {
       <button type="button" class="scf-btn scf-btn-primary" id="scf-apply-reload">Apply &amp; Reload</button>
       <button type="button" class="scf-btn scf-btn-secondary" id="scf-mode-toggle">Extended Mode</button>
       <button type="button" class="scf-btn scf-btn-secondary" id="scf-clear">Clear</button>
+      <button type="button" class="scf-btn scf-btn-help" id="scf-help" aria-label="Help">?</button>
     </div>
   `;
 
@@ -195,6 +197,11 @@ function wireUpInteractions(bar: HTMLElement): void {
   // Clear: reset UI to defaults
   bar.querySelector<HTMLElement>("#scf-clear")!.addEventListener("click", () => {
     restoreFiltersToUI(bar, DEFAULT_FILTERS);
+  });
+
+  // Help modal
+  bar.querySelector<HTMLElement>("#scf-help")!.addEventListener("click", () => {
+    openHelpModal();
   });
 }
 

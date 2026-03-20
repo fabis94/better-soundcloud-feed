@@ -242,3 +242,125 @@ div.stream__filter {
 .scf-pill-btn:hover:not(.scf-pill-active) {
   background: var(--highlight-color);
 }
+
+/* Help button */
+.scf-btn-help {
+  margin-left: auto;
+  background: var(--highlight-color);
+  color: var(--secondary-color);
+  font-weight: bold;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Help modal */
+.scf-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scf-help-dialog {
+  background: var(--surface-color);
+  color: var(--primary-color);
+  border: 1px solid var(--highlight-color);
+  border-radius: var(--borderRadiuses-4);
+  width: 560px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-serif-family);
+  font-size: var(--typography-captions-font-size);
+}
+
+.scf-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-1_5x) var(--spacing-2x);
+  border-bottom: 1px solid var(--highlight-color);
+  flex-shrink: 0;
+}
+
+.scf-help-title {
+  margin: 0;
+  font-size: var(--typography-heading5-font-size);
+  font-weight: var(--typography-heading5-font-weight);
+  color: var(--special-color);
+}
+
+.scf-help-close {
+  background: none;
+  border: none;
+  color: var(--secondary-color);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.scf-help-close:hover {
+  color: var(--primary-color);
+}
+
+.scf-help-body {
+  padding: var(--spacing-1_5x) var(--spacing-2x);
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+.scf-help-section {
+  margin-bottom: var(--spacing-2x);
+}
+
+.scf-help-section:last-child {
+  margin-bottom: 0;
+}
+
+.scf-help-section h3 {
+  margin: 0 0 var(--spacing-0_5x);
+  font-size: var(--typography-captions-font-size);
+  font-weight: var(--typography-heading5-font-weight);
+  color: var(--special-color);
+}
+
+.scf-help-section h4 {
+  margin: var(--spacing-1x) 0 var(--spacing-0_25x);
+  font-size: var(--typography-captions-font-size);
+  font-weight: var(--typography-heading5-font-weight);
+  color: var(--primary-color);
+}
+
+.scf-help-section p {
+  margin: 0 0 var(--spacing-0_5x);
+  color: var(--secondary-color);
+}
+
+.scf-help-section ul {
+  margin: 0 0 var(--spacing-0_5x);
+  padding-left: var(--spacing-2x);
+  color: var(--secondary-color);
+}
+
+.scf-help-section li {
+  margin-bottom: var(--spacing-0_25x);
+}
+
+.scf-help-section code {
+  background: var(--highlight-color);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: var(--typography-micro-font-size);
+  color: var(--primary-color);
+}
