@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
 import { createFilterStorage } from "./storage";
 import type { StorageBackend } from "./storage";
 import { buildFilters } from "../test/factories";
+import { SCActivityType } from "./types";
 
 function mockBackend(initial: Record<string, unknown> = {}): StorageBackend {
   const store = { ...initial };
@@ -24,7 +25,7 @@ describe("createFilterStorage", () => {
   it("returns defaults when storage is empty", async () => {
     const storage = createFilterStorage(mockBackend());
     const filters = await storage.load();
-    expect(filters.activityTypes).toHaveLength(3);
+    expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
     expect(filters.minDurationSeconds).toBeNull();
@@ -38,7 +39,7 @@ describe("createFilterStorage", () => {
     const storage = createFilterStorage(backend);
     const filters = await storage.load();
     expect(filters.searchString).toBe("garage");
-    expect(filters.activityTypes).toHaveLength(3); // defaults preserved
+    expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length); // defaults preserved
   });
 
   it("handles old-format stored data gracefully", async () => {
@@ -52,7 +53,7 @@ describe("createFilterStorage", () => {
     const storage = createFilterStorage(backend);
     const filters = await storage.load();
     // New fields get defaults
-    expect(filters.activityTypes).toHaveLength(3);
+    expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
   });

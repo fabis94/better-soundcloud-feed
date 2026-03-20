@@ -1,7 +1,8 @@
-import type { FilterState, SCActivityType } from "./types";
+import type { FilterState } from "./types";
+import { SCActivityType } from "./types";
 
 export const DEFAULT_FILTERS: FilterState = {
-  activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"] satisfies SCActivityType[],
+  activityTypes: Object.values(SCActivityType),
   searchMode: "simple",
   searchString: "",
   searchTitle: "",

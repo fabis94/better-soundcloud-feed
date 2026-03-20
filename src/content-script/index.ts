@@ -1,4 +1,5 @@
-import type { FilterState, FilterUpdateMessage, SCActivityType } from "../shared/types";
+import type { FilterState, FilterUpdateMessage } from "../shared/types";
+import { SCActivityType } from "../shared/types";
 import { createChromeFilterStorage, DEFAULT_FILTERS } from "../shared/storage";
 import { createLogger } from "../shared/logger";
 import { openHelpModal } from "./help-modal";
@@ -7,6 +8,12 @@ const log = createLogger("content-script");
 log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
 
 const FILTER_BAR_ID = "sc-feed-filter-bar";
+
+/** "TrackPost" → "Track post", "PlaylistRepost" → "Playlist repost" */
+function formatActivityType(type: string): string {
+  const spaced = type.replace(/([a-z])([A-Z])/g, "$1 $2");
+  return spaced[0] + spaced.slice(1).toLowerCase();
+}
 
 // Inject the page-context script before SC's JS runs
 const s = document.createElement("script");
@@ -28,9 +35,9 @@ function createFilterBar(): HTMLElement {
   bar.innerHTML = `
     <div class="scf-row">
       <label class="scf-label">Show:</label>
-      <label class="scf-check"><input type="checkbox" data-activity="TrackPost" checked> Tracks</label>
-      <label class="scf-check"><input type="checkbox" data-activity="TrackRepost" checked> Reposts</label>
-      <label class="scf-check"><input type="checkbox" data-activity="PlaylistPost" checked> Playlists</label>
+      ${Object.values(SCActivityType)
+        .map((t) => `<label class="scf-check"><input type="checkbox" data-activity="${t}" checked> ${formatActivityType(t)}</label>`)
+        .join("\n      ")}
     </div>
     <div class="scf-row">
       <label class="scf-label">Search:</label>

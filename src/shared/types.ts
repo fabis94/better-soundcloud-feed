@@ -149,7 +149,13 @@ export type SCStreamResponse = PartialDeep<SCRawStreamResponse>;
 
 // --- Stream endpoint query params ---
 
-export type SCActivityType = "TrackPost" | "TrackRepost" | "PlaylistPost";
+export const SCActivityType = {
+  TrackPost: "TrackPost",
+  TrackRepost: "TrackRepost",
+  PlaylistPost: "PlaylistPost",
+} as const;
+
+export type SCActivityType = (typeof SCActivityType)[keyof typeof SCActivityType];
 
 export interface SCStreamParams {
   sc_a_id: string;

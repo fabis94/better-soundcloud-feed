@@ -6,6 +6,7 @@ import type {
   SCStreamResponse,
   FilterState,
 } from "../shared/types";
+import { SCActivityType } from "../shared/types";
 
 let _id = 0;
 const nextId = (): number => ++_id;
@@ -136,7 +137,7 @@ export function buildStreamResponse(overrides: Record<string, unknown> = {}): SC
 
 export function buildFilters(overrides: Partial<FilterState> = {}): FilterState {
   return {
-    activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
+    activityTypes: Object.values(SCActivityType),
     searchMode: "simple",
     searchString: "",
     searchTitle: "",
