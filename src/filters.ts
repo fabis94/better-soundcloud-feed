@@ -11,11 +11,9 @@ export function matchesFilters(item: SCStreamItem, filters: FilterState): boolea
   const artistPermalink = inner.user.permalink.toLowerCase();
   if (filters.excludeArtists.includes(artistPermalink)) return false;
 
-  // Also check reposter
-  if (item.user) {
-    const reposterPermalink = item.user.permalink.toLowerCase();
-    if (filters.excludeArtists.includes(reposterPermalink)) return false;
-  }
+  // Also check poster/reposter
+  const posterPermalink = item.user.permalink.toLowerCase();
+  if (filters.excludeArtists.includes(posterPermalink)) return false;
 
   // Genre/tag whitelist (if specified, must match at least one)
   if (filters.genres.length > 0) {

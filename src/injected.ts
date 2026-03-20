@@ -58,10 +58,12 @@ import { isStreamUrl, extractUrl } from './url';
     this: InterceptedXHR,
     method: string,
     url: string | URL,
-    ...rest: [boolean?, string?, string?]
+    async?: boolean,
+    username?: string | null,
+    password?: string | null,
   ) {
     this._interceptUrl = String(url);
-    return origOpen.call(this, method, url, ...rest);
+    return origOpen.call(this, method, url, async ?? true, username ?? null, password ?? null);
   };
 
   XMLHttpRequest.prototype.send = function (

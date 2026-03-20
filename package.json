@@ -8,11 +8,13 @@
     "build": "vp build",
     "check": "vp check",
     "fmt": "vp fmt",
-    "test": "vp test"
+    "test": "vp test",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "chrome-types": "^0.1.327",
+    "typescript": "^5.9.3",
     "vite-plus": "^0.1.13"
   },
   "pnpm": {
