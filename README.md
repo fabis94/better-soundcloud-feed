@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/icon.svg" width="128" height="128" alt="Better SoundCloud Feed">
+</p>
+
 # Better SoundCloud Feed
 
 Chrome/Edge extension (Manifest V3) that filters your SoundCloud feed. Intercepts `api-v2.soundcloud.com/stream` API calls and filters items from the response before SoundCloud renders them.
