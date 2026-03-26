@@ -11,9 +11,9 @@ vi.mock("../shared/logger", () => ({
   }),
 }));
 
-// Mock chrome API
-const mockSave = vi.fn<(filters: unknown) => Promise<void>>().mockResolvedValue(undefined);
-const mockLoad = vi.fn().mockResolvedValue({
+// Mock storage
+const mockSave = vi.fn();
+const defaultFilters = {
   activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
   searchMode: "simple",
   searchString: "",
@@ -25,26 +25,15 @@ const mockLoad = vi.fn().mockResolvedValue({
   searchOperator: "and",
   minDurationSeconds: null,
   maxDurationSeconds: null,
-});
+};
 
 vi.mock("../shared/storage", () => ({
-  DEFAULT_FILTERS: {
-    activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
-    searchMode: "simple",
-    searchString: "",
-    searchTitle: "",
-    searchDescription: "",
-    searchGenre: "",
-    searchArtist: "",
-    searchLabel: "",
-    searchOperator: "and",
-    minDurationSeconds: null,
-    maxDurationSeconds: null,
+  DEFAULT_FILTERS: defaultFilters,
+  filterStorage: {
+    save: (...args: unknown[]) => mockSave(...args),
+    load: () => ({ ...defaultFilters }),
+    isAvailable: () => true,
   },
-  createChromeFilterStorage: () => ({
-    save: mockSave,
-    load: mockLoad,
-  }),
 }));
 
 // Stub chrome.runtime and chrome.storage before importing the module

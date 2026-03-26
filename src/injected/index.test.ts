@@ -13,19 +13,21 @@ vi.mock("../shared/logger", () => ({
 
 // Mock storage
 vi.mock("../shared/storage", () => ({
-  loadFiltersSync: () => ({
-    activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
-    searchMode: "simple",
-    searchString: "",
-    searchTitle: "",
-    searchDescription: "",
-    searchGenre: "",
-    searchArtist: "",
-    searchLabel: "",
-    searchOperator: "and",
-    minDurationSeconds: null,
-    maxDurationSeconds: null,
-  }),
+  filterStorage: {
+    load: () => ({
+      activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
+      searchMode: "simple",
+      searchString: "",
+      searchTitle: "",
+      searchDescription: "",
+      searchGenre: "",
+      searchArtist: "",
+      searchLabel: "",
+      searchOperator: "and",
+      minDurationSeconds: null,
+      maxDurationSeconds: null,
+    }),
+  },
 }));
 
 // Capture postMessage calls BEFORE the IIFE runs

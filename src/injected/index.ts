@@ -1,12 +1,12 @@
 import type { FilterState, BridgeMessage } from "../shared/types";
-import { loadFiltersSync } from "../shared/storage";
+import { filterStorage } from "../shared/storage";
 import { createLogger } from "../shared/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
 
 const log = createLogger("injected");
 
 (function () {
-  let currentFilters: FilterState = loadFiltersSync();
+  let currentFilters: FilterState = filterStorage.load();
   log.debug("Initial filters loaded from localStorage", { filters: currentFilters });
 
   const getFilters = () => currentFilters;

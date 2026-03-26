@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
+import { describe, it, expect, vi, beforeEach } from "@voidzero-dev/vite-plus-test";
 
 const store: Record<string, string> = {};
 const localStorageMock = {
@@ -15,32 +15,18 @@ const localStorageMock = {
 };
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, writable: true });
 
-import { createFilterStorage } from "./storage";
-import type { StorageBackend } from "./storage";
+import { filterStorage } from "./storage";
 import { buildFilters } from "../test/factories";
 import { SCActivityType } from "./types";
 
-function mockBackend(initial: Record<string, unknown> = {}): StorageBackend {
-  const store = { ...initial };
-  return {
-    get: vi.fn(async (keys: string | string[]) => {
-      const keyList = Array.isArray(keys) ? keys : [keys];
-      const result: Record<string, unknown> = {};
-      for (const k of keyList) {
-        if (k in store) result[k] = store[k];
-      }
-      return result;
-    }),
-    set: vi.fn(async (items: Record<string, unknown>) => {
-      Object.assign(store, items);
-    }),
-  };
-}
+beforeEach(() => {
+  localStorageMock.clear();
+  vi.clearAllMocks();
+});
 
-describe("createFilterStorage", () => {
-  it("returns defaults when storage is empty", async () => {
-    const storage = createFilterStorage(mockBackend());
-    const filters = await storage.load();
+describe("filterStorage", () => {
+  it("returns defaults when storage is empty", () => {
+    const filters = filterStorage.load();
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
@@ -48,44 +34,59 @@ describe("createFilterStorage", () => {
     expect(filters.maxDurationSeconds).toBeNull();
   });
 
-  it("merges stored values with defaults", async () => {
-    const backend = mockBackend({
-      "sc-feed-filters": { searchString: "garage" },
-    });
-    const storage = createFilterStorage(backend);
-    const filters = await storage.load();
+  it("merges stored values with defaults", () => {
+    localStorageMock.setItem("sc-feed-filters-sync", JSON.stringify({ searchString: "garage" }));
+    const filters = filterStorage.load();
     expect(filters.searchString).toBe("garage");
-    expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length); // defaults preserved
+    expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
   });
 
-  it("handles old-format stored data gracefully", async () => {
-    const backend = mockBackend({
-      "sc-feed-filters": {
+  it("handles old-format stored data gracefully", () => {
+    localStorageMock.setItem(
+      "sc-feed-filters-sync",
+      JSON.stringify({
         types: ["track", "track-repost"],
         excludeArtists: ["spammer"],
         genres: ["house"],
-      },
-    });
-    const storage = createFilterStorage(backend);
-    const filters = await storage.load();
-    // New fields get defaults
+      }),
+    );
+    const filters = filterStorage.load();
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
   });
 
-  it("round-trips save and load", async () => {
-    const backend = mockBackend();
-    const storage = createFilterStorage(backend);
+  it("round-trips save and load", () => {
     const filters = buildFilters({
       searchString: "garage",
       activityTypes: ["TrackPost"],
       minDurationSeconds: 60,
     });
-    await storage.save(filters);
-    const loaded = await storage.load();
+    filterStorage.save(filters);
+    const loaded = filterStorage.load();
     expect(loaded.searchString).toBe("garage");
     expect(loaded.activityTypes).toEqual(["TrackPost"]);
     expect(loaded.minDurationSeconds).toBe(60);
+  });
+
+  it("returns defaults when localStorage throws on read", () => {
+    localStorageMock.getItem.mockImplementationOnce(() => {
+      throw new Error("blocked");
+    });
+    const filters = filterStorage.load();
+    expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
+  });
+
+  describe("isAvailable", () => {
+    it("returns true when localStorage works", () => {
+      expect(filterStorage.isAvailable()).toBe(true);
+    });
+
+    it("returns false when localStorage throws", () => {
+      localStorageMock.setItem.mockImplementationOnce(() => {
+        throw new Error("blocked");
+      });
+      expect(filterStorage.isAvailable()).toBe(false);
+    });
   });
 });

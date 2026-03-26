@@ -1,5 +1,5 @@
 import type { FilterState, FilterUpdateMessage } from "../shared/types";
-import { createChromeFilterStorage, DEFAULT_FILTERS } from "../shared/storage";
+import { filterStorage, DEFAULT_FILTERS } from "../shared/storage";
 import { createLogger } from "../shared/logger";
 import { openHelpModal } from "./help-modal";
 import {
@@ -20,8 +20,6 @@ script.src = chrome.runtime.getURL("injected.js");
 script.onload = () => script.remove();
 (document.head ?? document.documentElement).prepend(script);
 
-const storage = createChromeFilterStorage();
-
 function sendFilters(filters: FilterState): void {
   const msg: FilterUpdateMessage = { type: "SC_FILTER_UPDATE", filters };
   window.postMessage(msg, "*");
@@ -30,7 +28,7 @@ function sendFilters(filters: FilterState): void {
 export function applyFiltersFromUI(bar: HTMLElement): void {
   const filters = readFiltersFromUI(bar);
   sendFilters(filters);
-  storage.save(filters);
+  filterStorage.save(filters);
 }
 
 export function injectFilterUI(): boolean {
@@ -56,9 +54,17 @@ export function injectFilterUI(): boolean {
   feedContainer.parentElement?.insertBefore(bar, feedContainer);
   log.debug("Filter bar injected into DOM");
 
-  storage.load().then((filters) => {
-    restoreFiltersToUI(bar, filters);
-  });
+  const filters = filterStorage.load();
+  restoreFiltersToUI(bar, filters);
+
+  const storageAvailable = filterStorage.isAvailable();
+  if (!storageAvailable) {
+    const reloadBtn = bar.querySelector<HTMLButtonElement>("#scf-apply-reload");
+    if (reloadBtn) {
+      reloadBtn.disabled = true;
+      reloadBtn.title = "localStorage is blocked — filters cannot persist across reloads";
+    }
+  }
 
   wireUpInteractions(bar, {
     onApply: applyFiltersFromUI,
