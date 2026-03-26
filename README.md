@@ -4,7 +4,7 @@
 
 # Better SoundCloud Feed
 
-Chrome/Edge extension (Manifest V3) that filters your SoundCloud feed. Intercepts `api-v2.soundcloud.com/stream` API calls and filters items from the response before SoundCloud renders them.
+Chrome/Edge/Firefox extension (Manifest V3) that filters your SoundCloud feed. Intercepts `api-v2.soundcloud.com/stream` API calls and filters items from the response before SoundCloud renders them.
 
 ## Quick start
 
@@ -15,10 +15,18 @@ pnpm build
 
 Then load the extension in your browser:
 
-1. Open `edge://extensions` (or `chrome://extensions`)
+**Chrome/Edge:**
+
+1. Open `chrome://extensions` (or `edge://extensions`)
 2. Enable **Developer mode** (toggle in top-right)
 3. Click **Load unpacked**
 4. Select the `dist/` folder
+
+**Firefox:**
+
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on**
+3. Select `dist/manifest.json`
 
 Navigate to [soundcloud.com](https://soundcloud.com/) — a filter bar appears above your feed.
 

@@ -18,6 +18,14 @@
     }
   ],
   "permissions": ["storage"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{18d69cbc-10a7-47e3-bac2-0d7e4318719a}",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",

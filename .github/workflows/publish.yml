@@ -69,6 +69,25 @@ jobs:
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
             "$CHROME_API/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish"
 
+  publish-firefox:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-zip
+
+      - name: Unzip
+        run: mkdir dist && cd dist && unzip ../extension.zip
+
+      - name: Submit to AMO
+        run: |
+          npx web-ext sign \
+            --channel listed \
+            --source-dir dist \
+            --api-key "${{ secrets.AMO_API_KEY }}" \
+            --api-secret "${{ secrets.AMO_API_SECRET }}"
+
   publish-edge:
     needs: build
     runs-on: ubuntu-latest

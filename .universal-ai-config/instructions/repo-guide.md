@@ -5,7 +5,7 @@ alwaysApply: true
 
 # SoundCloud Feed Filter — Repo Guide
 
-Manifest V3 browser extension (Chrome/Edge) that filters SoundCloud's `/feed` page by intercepting `api-v2.soundcloud.com/stream` API calls.
+Manifest V3 browser extension (Chrome/Edge/Firefox) that filters SoundCloud's `/feed` page by intercepting `api-v2.soundcloud.com/stream` API calls.
 
 ## Architecture
 
@@ -27,6 +27,7 @@ Shared code lives in `src/shared/` — types, filter logic, search parsing, URL 
 - **Explicit apply workflow**. Filters are only persisted and sent to the injected script when the user clicks Apply or Apply & Reload. UI-only changes (mode toggle, operator pill) don't auto-apply.
 - **localStorage sync**. `chrome.storage.local` is mirrored to `localStorage` on every load/save so the injected script (page context) can read filters synchronously via `loadFiltersSync()` for the first XHR.
 - **SC uses comma-separated `activityTypes` query param**, not repeated params. `withActivityTypes()` joins values with commas into a single `activityTypes=` param.
+- **Cross-browser compatibility**. Code must use `chrome.*` APIs only (not `browser.*`), since `chrome.*` is the common MV3 namespace supported by Chrome, Edge, and Firefox. No browser-specific APIs or polyfills.
 
 ## Build & Dev
 
@@ -39,7 +40,7 @@ pnpm test         # vitest
 pnpm typecheck    # tsc --noEmit
 ```
 
-Output goes to `dist/`. Load `dist/` as an unpacked extension in the browser. No hot reload — manually reload the extension after rebuilds.
+Output goes to `dist/`. Load `dist/` as an unpacked extension in the browser (Chrome/Edge: `Load unpacked`; Firefox: `about:debugging` → Load Temporary Add-on). No hot reload — manually reload the extension after rebuilds.
 
 ## Filter System
 
