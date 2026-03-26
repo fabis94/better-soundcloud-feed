@@ -63,29 +63,19 @@ jobs:
         with:
           name: extension-zip
 
-      - name: Get token
-        id: auth
-        run: |
-          TOKEN=$(curl -s -X POST "${{ secrets.EDGE_ACCESS_TOKEN_URL }}" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "client_id=${{ secrets.EDGE_CLIENT_ID }}" \
-            -d "scope=https://api.addons.microsoftedge.microsoft.com/.default" \
-            -d "client_secret=${{ secrets.EDGE_CLIENT_SECRET }}" \
-            -d "grant_type=client_credentials" | jq -r '.access_token')
-          echo "access_token=$TOKEN" >> "$GITHUB_OUTPUT"
-
       - name: Upload package
         run: |
-          curl -X POST \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
+          curl -f -X POST \
+            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
+            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
             -H "Content-Type: application/zip" \
             -T extension.zip \
             "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package"
 
       - name: Publish
         run: |
-          curl -X POST \
-            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
-            -H "Content-Type: application/json" \
-            -d '{}' \
+          curl -f -X POST \
+            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
+            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
+            -d '{"notes":""}' \
             "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions"
