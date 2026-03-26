@@ -37,23 +37,37 @@ jobs:
           path: extension.zip
 
   publish-chrome:
-    if: false
     needs: build
     runs-on: ubuntu-latest
+    env:
+      CHROME_API: https://chromewebstore.googleapis.com
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: extension-zip
 
-      - name: Upload & Publish
-        uses: mnao305/chrome-extension-upload@v5.0.0
-        with:
-          file-path: extension.zip
-          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
-          client-id: ${{ secrets.CHROME_CLIENT_ID }}
-          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
-          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          publish: true
+      - name: Get access token
+        id: auth
+        run: |
+          TOKEN=$(curl -s "https://oauth2.googleapis.com/token" \
+            -d "client_id=${{ secrets.CHROME_CLIENT_ID }}" \
+            -d "client_secret=${{ secrets.CHROME_CLIENT_SECRET }}" \
+            -d "refresh_token=${{ secrets.CHROME_REFRESH_TOKEN }}" \
+            -d "grant_type=refresh_token" | jq -r '.access_token')
+          echo "access_token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package
+        run: |
+          curl -f -X POST \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
+            -T extension.zip \
+            "$CHROME_API/upload/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:upload"
+
+      - name: Publish
+        run: |
+          curl -f -X POST \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
+            "$CHROME_API/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish"
 
   publish-edge:
     needs: build
