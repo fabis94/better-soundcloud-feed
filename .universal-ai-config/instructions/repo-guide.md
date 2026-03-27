@@ -40,7 +40,7 @@ API: `get()`, `get(key)`, `update(patch)`, `subscribe(fn)`, `reload()`, `isAvail
 
 Creating a new store is one line:
 ```ts
-export const myStore = new ReactiveStore<MyState>("storage-key", MY_DEFAULTS);
+export const myStore = new ReactiveStore<MyState>("bscf_mystate", MY_DEFAULTS);
 ```
 
 ### Cross-realm sync
@@ -61,7 +61,7 @@ This is why `SC_FILTER_UPDATE` doesn't exist — filter sync is handled entirely
 - **SC CSS variables for theming**. Never use hardcoded colors in `filter-ui.css`. Use SoundCloud's own CSS variables (see docblock in that file) for light/dark theme support.
 - **Explicit apply workflow** for filters. Filters are only persisted and sent to the injected script when the user clicks Apply or Apply & Reload. UI-only changes (mode toggle, operator pill) don't auto-apply.
 - **Instant apply for settings**. Extension settings (e.g. skip-forward toggle) take effect immediately via `settingsStore.subscribe()`.
-- **localStorage persistence**. Both `filterStore` and `settingsStore` use `localStorage` directly (not `chrome.storage`), so both the content script and injected script (page context) can access them.
+- **localStorage persistence**. Both `filterStore` and `settingsStore` use `localStorage` directly (not `chrome.storage`), so both the content script and injected script (page context) can access them. All keys use the `bscf_` prefix.
 - **Cross-browser compatibility**. Code must use `chrome.*` APIs only (not `browser.*`), since `chrome.*` is the common MV3 namespace supported by Chrome, Edge, and Firefox.
 
 ## Build & Dev
@@ -121,6 +121,7 @@ Tests are colocated with the files they test (e.g., `filters.test.ts` next to `f
 
 ## Conventions
 
+- **README.md is user-facing only** — features, setup, usage. Keep architectural details, internal patterns, and implementation notes in this repo guide. No duplication between the two.
 - `SCActivityType` const object is the single source of truth for activity types. Derive arrays via `Object.values()`, labels via `formatActivityType()`.
 - Keep content script `index.ts` lean — extract complex features into separate files/directories.
 - MutationObserver runs without debounce. Injection functions short-circuit via `getElementById` when already injected.
