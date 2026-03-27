@@ -6,6 +6,9 @@ const config: KnipConfig = ({ production }) => ({
     : ["src/content-script/index.ts", "src/injected/index.ts", "src/**/*.test.ts"],
   project: production ? ["src/**/*.ts!", "!src/**/*.test.ts", "!src/test/**"] : ["src/**/*.ts"],
   tags: ["-knipignore"],
+  ignoreBinaries: [
+    "web-ext", // used via npx in CI workflow, not a project dependency
+  ],
   ignoreDependencies: [
     "universal-ai-config", // CLI tool, not imported in code
     "@voidzero-dev/vite-plus-test", // bundled inside vite-plus

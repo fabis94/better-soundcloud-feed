@@ -56,7 +56,16 @@ Filters are persisted in `chrome.storage.local` and mirrored to `localStorage` f
 
 ## How it works
 
-1. A content script injects `injected.js` into the page context
+Browser extensions enforce two separate JavaScript environments:
+
+- **Content script** (`src/content-script/`) runs in an **isolated world** — it can access `chrome.*` extension APIs and the page DOM, but has its own `window` object separate from the page's.
+- **Injected script** (`src/injected/`) runs in the **page context (main world)** — the same environment as SoundCloud's code, so it can patch `window.fetch` and `XMLHttpRequest`, but cannot access extension APIs.
+
+Intercepting API responses requires patching the page's `fetch`/`XHR`, which only works from the main world. Persisting filter settings requires `chrome.storage.local`, which only works from the isolated world. The two scripts communicate over `window.postMessage` since the DOM is the one thing both worlds share.
+
+The flow:
+
+1. The content script injects `injected.js` into the page context via a `<script>` tag
 2. `injected.js` monkey-patches `window.fetch` and `XMLHttpRequest`
 3. API responses from `/stream` and `/feed` endpoints are intercepted, filtered, and returned to SoundCloud's JS
 4. The content script and injected script communicate via `window.postMessage`

@@ -55,7 +55,7 @@ interface SCRawPublisherMetadata {
   explicit: boolean;
 }
 
-interface SCRawTrack {
+export interface SCRawTrack {
   artwork_url: string | null;
   caption: string | null;
   commentable: boolean;
@@ -138,7 +138,7 @@ interface SCRawStreamResponse {
 
 // --- Exported deeply partial types (SC can change their API at any time) ---
 
-type Deep<T> = PartialDeep<T, { recurseIntoArrays: true }>;
+export type Deep<T> = PartialDeep<T, { recurseIntoArrays: true }>;
 
 /** @knipignore SC API surface — complete set, intentionally exported */
 export type SCBadges = Deep<SCRawBadges>;
