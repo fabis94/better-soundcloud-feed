@@ -1,5 +1,4 @@
-import type { FilterState, FilterUpdateMessage } from "../shared/types";
-import { filterStorage, DEFAULT_FILTERS } from "../shared/storage";
+import { filterStore, DEFAULT_FILTERS } from "../shared/storage";
 import { createLogger } from "../shared/logger";
 import { openHelpModal } from "./help-modal";
 import {
@@ -10,6 +9,7 @@ import {
   wireUpInteractions,
   isFeedPage,
 } from "./filter-bar";
+import { injectPlayerControls } from "./player-controls";
 
 const log = createLogger("content-script");
 log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
@@ -20,15 +20,11 @@ script.src = chrome.runtime.getURL("injected.js");
 script.onload = () => script.remove();
 (document.head ?? document.documentElement).prepend(script);
 
-function sendFilters(filters: FilterState): void {
-  const msg: FilterUpdateMessage = { type: "SC_FILTER_UPDATE", filters };
-  window.postMessage(msg, "*");
-}
-
 export function applyFiltersFromUI(bar: HTMLElement): void {
   const filters = readFiltersFromUI(bar);
-  sendFilters(filters);
-  filterStorage.save(filters);
+  // filterStore.update() persists to localStorage and syncs to the injected
+  // script's filterStore via cross-realm postMessage — no manual bridge needed.
+  filterStore.update(filters);
 }
 
 export function injectFilterUI(): boolean {
@@ -54,10 +50,10 @@ export function injectFilterUI(): boolean {
   feedContainer.parentElement?.insertBefore(bar, feedContainer);
   log.debug("Filter bar injected into DOM");
 
-  const filters = filterStorage.load();
+  const filters = filterStore.get();
   restoreFiltersToUI(bar, filters);
 
-  const storageAvailable = filterStorage.isAvailable();
+  const storageAvailable = filterStore.isAvailable();
   if (!storageAvailable) {
     const reloadBtn = bar.querySelector<HTMLButtonElement>("#scf-apply-reload");
     if (reloadBtn) {
@@ -86,6 +82,7 @@ export function injectFilterUI(): boolean {
 
 const observer = new MutationObserver(() => {
   if (isFeedPage()) injectFilterUI();
+  injectPlayerControls(); // Player bar is global, not feed-page-specific
 });
 
 function startObserving(): void {

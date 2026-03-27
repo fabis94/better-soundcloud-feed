@@ -1,4 +1,4 @@
-import type { Deep, SCRawTrack } from "./types";
+import type { Deep, SCRawTrack } from "./sc-api";
 
 // --- SC internal player types (raw, fully typed for documentation) ---
 

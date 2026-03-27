@@ -1,15 +1,7 @@
-const MODAL_ID = "scf-help-modal";
+import { openModal } from "./modal";
 
 const HELP_HTML = `
-<div class="scf-help-backdrop" id="scf-help-backdrop">
-  <div class="scf-help-dialog" role="dialog" aria-label="Filter Help">
-    <div class="scf-help-header">
-      <h2 class="scf-help-title">Filter Help</h2>
-      <button type="button" class="scf-help-close" id="scf-help-close" aria-label="Close">&times;</button>
-    </div>
-    <div class="scf-help-body">
-
-      <section class="scf-help-section">
+      <section class="scf-modal-section">
         <h3>Activity Types</h3>
         <p>Toggle which types of feed items to show:</p>
         <ul>
@@ -20,7 +12,7 @@ const HELP_HTML = `
         <p>These filter at the API level, so unchecked types are never fetched.</p>
       </section>
 
-      <section class="scf-help-section">
+      <section class="scf-modal-section">
         <h3>Search</h3>
         <p>Search works in two modes: <strong>Simple</strong> and <strong>Extended</strong>.</p>
 
@@ -31,7 +23,7 @@ const HELP_HTML = `
         <p>Separate inputs for each field: Title, Description, Genre, Artist, and Label. Only non-empty fields are used.</p>
       </section>
 
-      <section class="scf-help-section">
+      <section class="scf-modal-section">
         <h3>Search Syntax</h3>
         <p>Both modes support the same syntax in each input:</p>
         <ul>
@@ -43,7 +35,7 @@ const HELP_HTML = `
         </ul>
       </section>
 
-      <section class="scf-help-section">
+      <section class="scf-modal-section">
         <h3>All / Any Toggle</h3>
         <p>Controls how <em>include</em> terms combine:</p>
         <ul>
@@ -54,12 +46,12 @@ const HELP_HTML = `
         <p>In <strong>Extended Mode</strong>, this also controls how non-empty fields relate to each other.</p>
       </section>
 
-      <section class="scf-help-section">
+      <section class="scf-modal-section">
         <h3>Duration</h3>
         <p>Filter tracks by length in minutes. Set a minimum, maximum, or both. Applies only to tracks (not playlists).</p>
       </section>
 
-      <section class="scf-help-section">
+      <section class="scf-modal-section">
         <h3>Actions</h3>
         <ul>
           <li><strong>Apply</strong> &mdash; saves filters and applies them to next loaded pages (already-loaded items stay visible, page doesn't refresh)</li>
@@ -68,37 +60,8 @@ const HELP_HTML = `
           <li><strong>Clear</strong> &mdash; resets the UI to defaults (does not auto-apply &mdash; click Apply to persist)</li>
         </ul>
       </section>
-
-    </div>
-  </div>
-</div>
 `;
 
-function close(backdrop: HTMLElement): void {
-  backdrop.remove();
-}
-
 export function openHelpModal(): void {
-  // Don't open twice
-  if (document.getElementById(MODAL_ID)) return;
-
-  const container = document.createElement("div");
-  container.id = MODAL_ID;
-  container.innerHTML = HELP_HTML;
-  document.body.appendChild(container);
-
-  const backdrop = container.querySelector<HTMLElement>("#scf-help-backdrop")!;
-  const closeBtn = container.querySelector<HTMLElement>("#scf-help-close")!;
-
-  closeBtn.addEventListener("click", () => close(container));
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) close(container);
-  });
-
-  document.addEventListener("keydown", function handler(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-      close(container);
-      document.removeEventListener("keydown", handler);
-    }
-  });
+  openModal({ id: "scf-help-modal", title: "Filter Help", content: HELP_HTML });
 }

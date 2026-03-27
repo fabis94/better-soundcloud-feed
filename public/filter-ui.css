@@ -259,8 +259,8 @@ div.stream__filter {
   flex-shrink: 0;
 }
 
-/* Help modal */
-.scf-help-backdrop {
+/* Modal */
+.scf-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 99999;
@@ -270,7 +270,7 @@ div.stream__filter {
   justify-content: center;
 }
 
-.scf-help-dialog {
+.scf-modal-dialog {
   background: var(--surface-color);
   color: var(--primary-color);
   border: 1px solid var(--highlight-color);
@@ -284,7 +284,7 @@ div.stream__filter {
   font-size: var(--typography-captions-font-size);
 }
 
-.scf-help-header {
+.scf-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -293,14 +293,14 @@ div.stream__filter {
   flex-shrink: 0;
 }
 
-.scf-help-title {
+.scf-modal-title {
   margin: 0;
   font-size: var(--typography-heading5-font-size);
   font-weight: var(--typography-heading5-font-weight);
   color: var(--special-color);
 }
 
-.scf-help-close {
+.scf-modal-close {
   background: none;
   border: none;
   color: var(--secondary-color);
@@ -310,57 +310,106 @@ div.stream__filter {
   padding: 0 4px;
 }
 
-.scf-help-close:hover {
+.scf-modal-close:hover {
   color: var(--primary-color);
 }
 
-.scf-help-body {
+.scf-modal-body {
   padding: var(--spacing-1_5x) var(--spacing-2x);
   overflow-y: auto;
   line-height: 1.5;
 }
 
-.scf-help-section {
+.scf-modal-section {
   margin-bottom: var(--spacing-2x);
 }
 
-.scf-help-section:last-child {
+.scf-modal-section:last-child {
   margin-bottom: 0;
 }
 
-.scf-help-section h3 {
+.scf-modal-section h3 {
   margin: 0 0 var(--spacing-0_5x);
   font-size: var(--typography-captions-font-size);
   font-weight: var(--typography-heading5-font-weight);
   color: var(--special-color);
 }
 
-.scf-help-section h4 {
+.scf-modal-section h4 {
   margin: var(--spacing-1x) 0 var(--spacing-0_25x);
   font-size: var(--typography-captions-font-size);
   font-weight: var(--typography-heading5-font-weight);
   color: var(--primary-color);
 }
 
-.scf-help-section p {
+.scf-modal-section p {
   margin: 0 0 var(--spacing-0_5x);
   color: var(--secondary-color);
 }
 
-.scf-help-section ul {
+.scf-modal-section ul {
   margin: 0 0 var(--spacing-0_5x);
   padding-left: var(--spacing-2x);
   color: var(--secondary-color);
 }
 
-.scf-help-section li {
+.scf-modal-section li {
   margin-bottom: var(--spacing-0_25x);
 }
 
-.scf-help-section code {
+.scf-modal-section code {
   background: var(--highlight-color);
   padding: 1px 5px;
   border-radius: 3px;
   font-size: var(--typography-micro-font-size);
   color: var(--primary-color);
+}
+
+/* Player bar controls */
+.scf-skip-forward,
+.scf-settings-btn {
+  color: var(--primary-color);
+}
+
+.scf-skip-forward svg {
+  width: 24px;
+  height: 24px;
+}
+
+.scf-settings-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.scf-settings-btn {
+  padding: 0;
+  margin: 0 12px;
+  cursor: pointer;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+}
+
+.scf-btn-disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Settings modal toggle row */
+.scf-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-0_5x) 0;
+  cursor: pointer;
+  user-select: none;
+  color: var(--primary-color);
+}
+
+.scf-toggle {
+  accent-color: var(--special-color);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }

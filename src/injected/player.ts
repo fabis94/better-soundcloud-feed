@@ -1,4 +1,4 @@
-import type { SCPlayer } from "../shared/player-types";
+import type { SCPlayer } from "../shared/types";
 
 interface WebpackModule {
   exports: Record<string, unknown>;

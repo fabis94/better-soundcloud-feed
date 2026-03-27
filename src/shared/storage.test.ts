@@ -15,18 +15,19 @@ const localStorageMock = {
 };
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, writable: true });
 
-import { filterStorage } from "./storage";
+import { filterStore } from "./storage";
 import { buildFilters } from "../test/factories";
 import { SCActivityType } from "./types";
 
 beforeEach(() => {
   localStorageMock.clear();
   vi.clearAllMocks();
+  filterStore.reload();
 });
 
-describe("filterStorage", () => {
+describe("filterStore", () => {
   it("returns defaults when storage is empty", () => {
-    const filters = filterStorage.load();
+    const filters = filterStore.get();
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
@@ -36,7 +37,8 @@ describe("filterStorage", () => {
 
   it("merges stored values with defaults", () => {
     localStorageMock.setItem("sc-feed-filters-sync", JSON.stringify({ searchString: "garage" }));
-    const filters = filterStorage.load();
+    filterStore.reload();
+    const filters = filterStore.get();
     expect(filters.searchString).toBe("garage");
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
   });
@@ -50,20 +52,21 @@ describe("filterStorage", () => {
         genres: ["house"],
       }),
     );
-    const filters = filterStorage.load();
+    filterStore.reload();
+    const filters = filterStore.get();
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
   });
 
-  it("round-trips save and load", () => {
+  it("round-trips update and get", () => {
     const filters = buildFilters({
       searchString: "garage",
       activityTypes: ["TrackPost"],
       minDurationSeconds: 60,
     });
-    filterStorage.save(filters);
-    const loaded = filterStorage.load();
+    filterStore.update(filters);
+    const loaded = filterStore.get();
     expect(loaded.searchString).toBe("garage");
     expect(loaded.activityTypes).toEqual(["TrackPost"]);
     expect(loaded.minDurationSeconds).toBe(60);
@@ -73,20 +76,21 @@ describe("filterStorage", () => {
     localStorageMock.getItem.mockImplementationOnce(() => {
       throw new Error("blocked");
     });
-    const filters = filterStorage.load();
+    filterStore.reload();
+    const filters = filterStore.get();
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
   });
 
   describe("isAvailable", () => {
     it("returns true when localStorage works", () => {
-      expect(filterStorage.isAvailable()).toBe(true);
+      expect(filterStore.isAvailable()).toBe(true);
     });
 
     it("returns false when localStorage throws", () => {
       localStorageMock.setItem.mockImplementationOnce(() => {
         throw new Error("blocked");
       });
-      expect(filterStorage.isAvailable()).toBe(false);
+      expect(filterStore.isAvailable()).toBe(false);
     });
   });
 });

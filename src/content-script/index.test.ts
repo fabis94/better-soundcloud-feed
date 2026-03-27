@@ -12,7 +12,7 @@ vi.mock("../shared/logger", () => ({
 }));
 
 // Mock storage
-const mockSave = vi.fn();
+const mockUpdate = vi.fn();
 const defaultFilters = {
   activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
   searchMode: "simple",
@@ -29,11 +29,16 @@ const defaultFilters = {
 
 vi.mock("../shared/storage", () => ({
   DEFAULT_FILTERS: defaultFilters,
-  filterStorage: {
-    save: (...args: unknown[]) => mockSave(...args),
-    load: () => ({ ...defaultFilters }),
+  filterStore: {
+    update: (...args: unknown[]) => mockUpdate(...args),
+    get: () => ({ ...defaultFilters }),
     isAvailable: () => true,
   },
+}));
+
+// Mock player-controls to avoid side effects
+vi.mock("./player-controls", () => ({
+  injectPlayerControls: vi.fn(() => false),
 }));
 
 // Stub chrome.runtime and chrome.storage before importing the module
@@ -92,9 +97,7 @@ describe("injectFilterUI", () => {
 });
 
 describe("applyFiltersFromUI", () => {
-  it("sends postMessage with filter data", () => {
-    const spy = vi.spyOn(window, "postMessage");
-    // Create a bar in the DOM
+  it("updates filterStore with current UI state", () => {
     const parent = document.createElement("div");
     const stream = document.createElement("div");
     stream.className = "stream__list";
@@ -105,24 +108,11 @@ describe("applyFiltersFromUI", () => {
     const bar = document.getElementById("sc-feed-filter-bar")!;
     applyFiltersFromUI(bar);
 
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "SC_FILTER_UPDATE", filters: expect.any(Object) }),
-      "*",
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activityTypes: expect.any(Array),
+        searchMode: expect.any(String),
+      }),
     );
-    spy.mockRestore();
-  });
-
-  it("saves filters to storage", () => {
-    const parent = document.createElement("div");
-    const stream = document.createElement("div");
-    stream.className = "stream__list";
-    parent.appendChild(stream);
-    document.body.appendChild(parent);
-    injectFilterUI();
-
-    const bar = document.getElementById("sc-feed-filter-bar")!;
-    applyFiltersFromUI(bar);
-
-    expect(mockSave).toHaveBeenCalledWith(expect.any(Object));
   });
 });

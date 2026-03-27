@@ -13,8 +13,8 @@ vi.mock("../shared/logger", () => ({
 
 // Mock storage
 vi.mock("../shared/storage", () => ({
-  filterStorage: {
-    load: () => ({
+  filterStore: {
+    get: () => ({
       activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
       searchMode: "simple",
       searchString: "",
@@ -28,6 +28,11 @@ vi.mock("../shared/storage", () => ({
       maxDurationSeconds: null,
     }),
   },
+}));
+
+// Mock player discovery (never resolves to avoid side effects)
+vi.mock("./player", () => ({
+  discoverPlayer: () => new Promise(() => {}),
 }));
 
 // Capture postMessage calls BEFORE the IIFE runs
@@ -62,25 +67,13 @@ describe("injected module", () => {
     expect(readyCall![1]).toBe("*");
   });
 
-  it("accepts SC_FILTER_UPDATE messages without error", () => {
+  it("accepts SC_PLAYER_COMMAND messages without error", () => {
     expect(() => {
       window.dispatchEvent(
         new MessageEvent("message", {
           data: {
-            type: "SC_FILTER_UPDATE",
-            filters: {
-              activityTypes: ["TrackPost"],
-              searchMode: "simple",
-              searchString: "test",
-              searchTitle: "",
-              searchDescription: "",
-              searchGenre: "",
-              searchArtist: "",
-              searchLabel: "",
-              searchOperator: "and",
-              minDurationSeconds: null,
-              maxDurationSeconds: null,
-            },
+            type: "SC_PLAYER_COMMAND",
+            payload: { action: "skipForward" },
           },
           source: window,
         }),
