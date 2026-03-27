@@ -20,12 +20,12 @@ Shared code lives in `src/shared/` — types, filter logic, search parsing, URL 
 
 ## Key Constraints
 
-- **SC API types are `PartialDeep`**. SC can change their API at any time. Raw types (`SCRaw*`) are internal; exported types use `PartialDeep` from type-fest. Always use `?.` when accessing SC data fields.
+- **SC API types are `PartialDeep`**. SoundCloud's API is undocumented and can change without notice — fields may be added, removed, renamed, or change type at any time. Raw types (`SCRaw*`) are internal; exported types use `PartialDeep` from type-fest. Always use `?.` when accessing SC data fields. Never assume a field exists or has a specific shape. Code must gracefully handle missing/malformed data — skip items with broken fields rather than crashing the entire filter pipeline.
 - **IIFE output only**. Content scripts cannot use ES modules. Both entries build as IIFE via Vite Environments API with `consumer: "client"` on the injected environment to bundle node_modules.
 - **No top-level await**. Content scripts don't support it. LogTape uses `configureSync`.
 - **SC CSS variables for theming**. Never use hardcoded colors in `filter-ui.css`. Use SoundCloud's own CSS variables (see docblock in that file) for light/dark theme support.
 - **Explicit apply workflow**. Filters are only persisted and sent to the injected script when the user clicks Apply or Apply & Reload. UI-only changes (mode toggle, operator pill) don't auto-apply.
-- **localStorage sync**. `chrome.storage.local` is mirrored to `localStorage` on every load/save so the injected script (page context) can read filters synchronously via `loadFiltersSync()` for the first XHR.
+- **localStorage persistence**. Filters are stored directly in `localStorage` via `filterStorage.load()` / `filterStorage.save()`, so both the content script and injected script (page context) can access them synchronously.
 - **SC uses comma-separated `activityTypes` query param**, not repeated params. `withActivityTypes()` joins values with commas into a single `activityTypes=` param.
 - **Cross-browser compatibility**. Code must use `chrome.*` APIs only (not `browser.*`), since `chrome.*` is the common MV3 namespace supported by Chrome, Edge, and Firefox. No browser-specific APIs or polyfills.
 
@@ -77,4 +77,4 @@ Tests are colocated with the files they test (e.g., `filters.test.ts` next to `f
 - `SCActivityType` const object is the single source of truth for activity types. Derive arrays via `Object.values()`, labels via `formatActivityType()`. No separate label maps or arrays.
 - Keep content script `index.ts` lean — extract complex features (help modal, etc.) into separate files in the same directory.
 - MutationObserver runs without debounce. `injectFilterUI()` short-circuits via `getElementById` when bar exists, keeping per-mutation cost negligible.
-- Test factories use `Record<string, unknown>` overrides with `as` casts to work around `PartialDeep` type complexity.
+- Test factories use `Partial<T>` overrides. `buildStreamResponse` is the exception — it uses `Record<string, unknown>` with an `as` cast to work around `PartialDeep` type complexity at the top-level response type.
