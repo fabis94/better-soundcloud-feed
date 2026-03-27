@@ -16,4 +16,4 @@ export const DEFAULT_FILTERS: FilterState = {
   maxDurationSeconds: null,
 };
 
-export const filterStore = new ReactiveStore<FilterState>("sc-feed-filters-sync", DEFAULT_FILTERS);
+export const filterStore = new ReactiveStore<FilterState>("bscf_filters", DEFAULT_FILTERS);

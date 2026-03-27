@@ -36,7 +36,7 @@ describe("filterStore", () => {
   });
 
   it("merges stored values with defaults", () => {
-    localStorageMock.setItem("sc-feed-filters-sync", JSON.stringify({ searchString: "garage" }));
+    localStorageMock.setItem("bscf_filters", JSON.stringify({ searchString: "garage" }));
     filterStore.reload();
     const filters = filterStore.get();
     expect(filters.searchString).toBe("garage");
@@ -45,7 +45,7 @@ describe("filterStore", () => {
 
   it("handles old-format stored data gracefully", () => {
     localStorageMock.setItem(
-      "sc-feed-filters-sync",
+      "bscf_filters",
       JSON.stringify({
         types: ["track", "track-repost"],
         excludeArtists: ["spammer"],

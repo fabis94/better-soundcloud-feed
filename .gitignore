@@ -21,3 +21,5 @@ dist/
 .vscode/mcp.json
 .cursor/mcp.json
 # <<< universal-ai-config <<<
+
+coverage
