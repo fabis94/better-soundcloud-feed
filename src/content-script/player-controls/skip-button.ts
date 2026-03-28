@@ -9,6 +9,7 @@ export function createSkipButton(): HTMLButtonElement {
   btn.id = SKIP_BTN_ID;
   btn.className =
     "skipControl sc-ir playControls__control sc-button sc-button-secondary sc-button-large sc-button-icon sc-mr-2x scf-skip-forward";
+  btn.style.marginLeft = "-12px"; // override SC's .sc-mr-2x
   btn.innerHTML = `<div>${skipForwardIcon}</div>`;
   btn.title = "Skip forward";
 

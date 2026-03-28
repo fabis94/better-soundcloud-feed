@@ -1,5 +1,6 @@
 import type { BridgeMessage, PlayerCommand } from "../shared/types";
 import { filterStore } from "../shared/storage";
+import { settingsStore } from "../shared/settings-store";
 import { createLogger } from "../shared/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
 import { discoverPlayer } from "./player";
@@ -13,7 +14,7 @@ function handlePlayerCommand(cmd: PlayerCommand): void {
       if (!sound) return;
       const position = sound.player?.getPosition?.() ?? 0;
       const duration = sound.player?.getDuration?.() ?? 0;
-      const amount = 30000;
+      const amount = settingsStore.get("skipForwardSeconds") * 1000;
       if (duration > 0 && position + amount > duration * 0.9) {
         window.scPlayer?.playNext?.();
       } else {

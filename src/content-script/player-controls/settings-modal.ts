@@ -27,10 +27,15 @@ function openSettingsModal(): void {
     title: "Extension Settings",
     content: `
       <section class="scf-modal-section">
-        <h3>Player Controls</h3>
+        <h3>Seek Forward</h3>
         <label class="scf-toggle-row">
-          <span>Skip Forward Button</span>
+          <span>Enable Skip Forward Button</span>
           <input type="checkbox" class="scf-toggle" id="scf-setting-skip-forward">
+        </label>
+        <label class="scf-toggle-row">
+          <span>Seconds to seek forward</span>
+          <input type="number" class="scf-input scf-input-small"
+                 id="scf-setting-skip-seconds" min="1" max="300" step="1">
         </label>
       </section>
     `,
@@ -43,5 +48,15 @@ function openSettingsModal(): void {
 
   toggle.addEventListener("change", () => {
     settingsStore.update({ skipForwardEnabled: toggle.checked });
+  });
+
+  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!;
+  secondsInput.value = String(settingsStore.get("skipForwardSeconds"));
+
+  secondsInput.addEventListener("change", () => {
+    const val = parseInt(secondsInput.value, 10);
+    if (val > 0) {
+      settingsStore.update({ skipForwardSeconds: val });
+    }
   });
 }

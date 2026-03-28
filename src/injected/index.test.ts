@@ -30,6 +30,20 @@ vi.mock("../shared/storage", () => ({
   },
 }));
 
+// Mock settings store
+vi.mock("../shared/settings-store", () => ({
+  settingsStore: {
+    get: (key?: string) => {
+      if (key === "skipForwardSeconds") return 30;
+      return { skipForwardEnabled: false, skipForwardSeconds: 30 };
+    },
+    update: vi.fn(),
+    subscribe: vi.fn(() => () => {}),
+    reload: vi.fn(),
+    isAvailable: () => true,
+  },
+}));
+
 // Mock player discovery (never resolves to avoid side effects)
 vi.mock("./player", () => ({
   discoverPlayer: () => new Promise(() => {}),
