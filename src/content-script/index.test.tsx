@@ -51,7 +51,7 @@ Object.defineProperty(globalThis, "chrome", {
 });
 
 // Must import after mocks are set up
-const { injectFilterUI, applyFiltersFromUI } = await import("./index");
+const { injectFilterUI } = await import("./index");
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -62,13 +62,18 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
+function createFeedContainer(): HTMLElement {
+  const parent = document.createElement("div");
+  const stream = document.createElement("div");
+  stream.className = "stream__list";
+  parent.appendChild(stream);
+  document.body.appendChild(parent);
+  return parent;
+}
+
 describe("injectFilterUI", () => {
   it("inserts filter bar before the feed container", () => {
-    const parent = document.createElement("div");
-    const stream = document.createElement("div");
-    stream.className = "stream__list";
-    parent.appendChild(stream);
-    document.body.appendChild(parent);
+    const parent = createFeedContainer();
 
     const result = injectFilterUI();
     expect(result).toBe(true);
@@ -84,35 +89,21 @@ describe("injectFilterUI", () => {
   });
 
   it("does not duplicate the bar on repeated calls", () => {
-    const parent = document.createElement("div");
-    const stream = document.createElement("div");
-    stream.className = "stream__list";
-    parent.appendChild(stream);
-    document.body.appendChild(parent);
+    createFeedContainer();
 
     injectFilterUI();
     injectFilterUI();
     expect(document.querySelectorAll("#sc-feed-filter-bar").length).toBe(1);
   });
-});
 
-describe("applyFiltersFromUI", () => {
-  it("updates filterStore with current UI state", () => {
-    const parent = document.createElement("div");
-    const stream = document.createElement("div");
-    stream.className = "stream__list";
-    parent.appendChild(stream);
-    document.body.appendChild(parent);
+  it("renders filter bar with all action buttons", () => {
+    createFeedContainer();
     injectFilterUI();
 
     const bar = document.getElementById("sc-feed-filter-bar")!;
-    applyFiltersFromUI(bar);
-
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        activityTypes: expect.any(Array),
-        searchMode: expect.any(String),
-      }),
-    );
+    expect(bar.querySelector("#scf-apply")).not.toBeNull();
+    expect(bar.querySelector("#scf-apply-reload")).not.toBeNull();
+    expect(bar.querySelector("#scf-clear")).not.toBeNull();
+    expect(bar.querySelector("#scf-help")).not.toBeNull();
   });
 });

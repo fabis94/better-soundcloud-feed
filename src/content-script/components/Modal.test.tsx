@@ -1,20 +1,27 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from "@voidzero-dev/vite-plus-test";
-import { openModal } from "./modal";
+import { Modal, mountModal } from "./Modal";
 
 afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("openModal", () => {
+describe("mountModal", () => {
   it("creates a modal appended to body", () => {
-    const container = openModal({ id: "test-modal", title: "Test", content: "<p>Hello</p>" });
-    expect(container).not.toBeNull();
+    mountModal("test-modal", (close) => (
+      <Modal title="Test" onClose={close}>
+        <p>Hello</p>
+      </Modal>
+    ));
     expect(document.getElementById("test-modal")).not.toBeNull();
   });
 
   it("contains backdrop, dialog, title, close button, and body content", () => {
-    openModal({ id: "test-modal", title: "My Title", content: "<p>Body</p>" });
+    mountModal("test-modal", (close) => (
+      <Modal title="My Title" onClose={close}>
+        <p>Body</p>
+      </Modal>
+    ));
     const modal = document.getElementById("test-modal")!;
     expect(modal.querySelector("[data-scf-backdrop]")).not.toBeNull();
     expect(modal.querySelector(".scf-modal-dialog")).not.toBeNull();
@@ -23,34 +30,67 @@ describe("openModal", () => {
     expect(modal.querySelector(".scf-modal-body p")!.textContent).toBe("Body");
   });
 
-  it("returns null for duplicate IDs", () => {
-    openModal({ id: "dup", title: "A", content: "" });
-    const second = openModal({ id: "dup", title: "B", content: "" });
-    expect(second).toBeNull();
+  it("no-ops for duplicate IDs", () => {
+    mountModal("dup", (close) => (
+      <Modal title="A" onClose={close}>
+        A
+      </Modal>
+    ));
+    mountModal("dup", (close) => (
+      <Modal title="B" onClose={close}>
+        B
+      </Modal>
+    ));
     expect(document.querySelectorAll("#dup").length).toBe(1);
   });
 
   it("closes when X button is clicked", () => {
-    openModal({ id: "close-test", title: "T", content: "" });
+    mountModal("close-test", (close) => (
+      <Modal title="T" onClose={close}>
+        X
+      </Modal>
+    ));
     document.querySelector<HTMLElement>(".scf-modal-close")!.click();
     expect(document.getElementById("close-test")).toBeNull();
   });
 
   it("closes when backdrop is clicked", () => {
-    openModal({ id: "backdrop-test", title: "T", content: "" });
+    mountModal("backdrop-test", (close) => (
+      <Modal title="T" onClose={close}>
+        X
+      </Modal>
+    ));
     document.querySelector<HTMLElement>("[data-scf-backdrop]")!.click();
     expect(document.getElementById("backdrop-test")).toBeNull();
   });
 
   it("does NOT close when clicking inside the dialog", () => {
-    openModal({ id: "dialog-test", title: "T", content: "" });
+    mountModal("dialog-test", (close) => (
+      <Modal title="T" onClose={close}>
+        X
+      </Modal>
+    ));
     document.querySelector<HTMLElement>(".scf-modal-dialog")!.click();
     expect(document.getElementById("dialog-test")).not.toBeNull();
   });
 
   it("closes on Escape key", () => {
-    openModal({ id: "esc-test", title: "T", content: "" });
+    mountModal("esc-test", (close) => (
+      <Modal title="T" onClose={close}>
+        X
+      </Modal>
+    ));
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(document.getElementById("esc-test")).toBeNull();
+  });
+
+  it("has dialog role and aria-label", () => {
+    mountModal("aria-test", (close) => (
+      <Modal title="Accessible Title" onClose={close}>
+        X
+      </Modal>
+    ));
+    const dialog = document.querySelector("[role='dialog']")!;
+    expect(dialog.getAttribute("aria-label")).toBe("Accessible Title");
   });
 });

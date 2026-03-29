@@ -59,11 +59,11 @@ Changes only take effect when the user clicks **Apply** or **Apply & Reload**.
 
 ### Player Controls
 
-| Control              | Behavior                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| **Settings button**  | Gear icon in the player bar — opens extension settings dialog.                                   |
-| **Seek forward**     | Seeks forward by configurable seconds (default 30), or skips to next track if near the end.      |
-| **Seek backward**    | Seeks backward by configurable seconds (default 30), or skips to previous track if near the start. |
+| Control             | Behavior                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| **Settings button** | Gear icon in the player bar — opens extension settings dialog.                                     |
+| **Seek forward**    | Seeks forward by configurable seconds (default 30), or skips to next track if near the end.        |
+| **Seek backward**   | Seeks backward by configurable seconds (default 30), or skips to previous track if near the start. |
 
 Seek buttons are enabled by default. Toggle and customize the seek duration in extension settings. Player controls appear greyed out until the player API is discovered, then become active.
 

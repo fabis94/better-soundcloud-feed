@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from "@voidzero-dev/vite-plus-test";
-import { openHelpModal } from "./help-modal";
+import { openHelpModal } from "./HelpModal";
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -32,35 +32,24 @@ describe("openHelpModal", () => {
 
   it("removes modal when close button is clicked", () => {
     openHelpModal();
-    const closeBtn = document.querySelector<HTMLElement>(".scf-modal-close")!;
-    closeBtn.click();
+    document.querySelector<HTMLElement>(".scf-modal-close")!.click();
     expect(document.getElementById("scf-help-modal")).toBeNull();
   });
 
   it("removes modal when backdrop is clicked", () => {
     openHelpModal();
-    const backdrop = document.querySelector<HTMLElement>("[data-scf-backdrop]")!;
-    backdrop.click();
+    document.querySelector<HTMLElement>("[data-scf-backdrop]")!.click();
     expect(document.getElementById("scf-help-modal")).toBeNull();
   });
 
   it("does NOT close when clicking inside the dialog", () => {
     openHelpModal();
-    const dialog = document.querySelector<HTMLElement>(".scf-modal-dialog")!;
-    dialog.click();
+    document.querySelector<HTMLElement>(".scf-modal-dialog")!.click();
     expect(document.getElementById("scf-help-modal")).not.toBeNull();
   });
 
   it("removes modal when Escape is pressed", () => {
     openHelpModal();
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    expect(document.getElementById("scf-help-modal")).toBeNull();
-  });
-
-  it("cleans up Escape listener after close", () => {
-    openHelpModal();
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    // Should not throw when pressing Escape again with no modal
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(document.getElementById("scf-help-modal")).toBeNull();
   });

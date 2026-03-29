@@ -5,8 +5,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "vp build --watch",
+    "dev": "vp build --watch --mode development",
     "build": "vp build",
+    "build:dev": "vp build --mode development",
     "check": "vp check",
     "fmt": "vp fmt",
     "test": "vp test",
@@ -19,7 +20,9 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@logtape/logtape": "^2.0.4"
+    "@logtape/logtape": "^2.0.4",
+    "@preact/signals": "^2.9.0",
+    "preact": "^10.29.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

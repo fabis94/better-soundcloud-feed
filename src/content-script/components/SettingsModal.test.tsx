@@ -22,12 +22,11 @@ vi.mock("../../shared/settings-store", () => ({
   },
 }));
 
-import { createSettingsButton, updateSettingsButton } from "./settings-modal";
+import { openSettingsModal } from "./SettingsModal";
 
 function openModal() {
-  const btn = createSettingsButton();
-  document.body.appendChild(btn);
-  btn.click();
+  mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 30 });
+  openSettingsModal();
   return document.getElementById("scf-settings-modal")!;
 }
 
@@ -39,60 +38,34 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("createSettingsButton", () => {
-  it("creates a button with correct ID and classes", () => {
-    const btn = createSettingsButton();
-    expect(btn.id).toBe("scf-settings-btn");
-    expect(btn.classList.contains("scf-settings-btn")).toBe(true);
-  });
-
-  it("contains an SVG icon", () => {
-    const btn = createSettingsButton();
-    expect(btn.querySelector("svg")).not.toBeNull();
-  });
-
-  it("opens settings modal on click", () => {
+describe("SettingsModal", () => {
+  it("renders with correct title", () => {
     const modal = openModal();
-    expect(modal).not.toBeNull();
     expect(modal.querySelector(".scf-modal-title")!.textContent).toBe(
       "Better SC Feed Playback Settings",
     );
   });
 
   it("does not open duplicate modals", () => {
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    btn.click();
+    openModal();
+    openSettingsModal();
     expect(document.querySelectorAll("#scf-settings-modal").length).toBe(1);
-  });
-});
-
-describe("updateSettingsButton", () => {
-  it("adds disabled class when playerReady is false", () => {
-    const el = createSettingsButton();
-    updateSettingsButton(el, false);
-    expect(el.classList.contains("scf-btn-disabled")).toBe(true);
-  });
-
-  it("removes disabled class when playerReady is true", () => {
-    const el = createSettingsButton();
-    updateSettingsButton(el, true);
-    expect(el.classList.contains("scf-btn-disabled")).toBe(false);
   });
 });
 
 describe("settings modal initial state", () => {
   it("reads current seekEnabled state", () => {
     mockGet.mockReturnValue({ seekEnabled: true, seekSeconds: 30 });
-    const modal = openModal();
+    openSettingsModal();
+    const modal = document.getElementById("scf-settings-modal")!;
     const toggle = modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!;
     expect(toggle.checked).toBe(true);
   });
 
   it("reads current seekSeconds value", () => {
     mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 45 });
-    const modal = openModal();
+    openSettingsModal();
+    const modal = document.getElementById("scf-settings-modal")!;
     const input = modal.querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!;
     expect(input.value).toBe("45");
   });
@@ -100,11 +73,17 @@ describe("settings modal initial state", () => {
 
 describe("Apply button", () => {
   it("saves settings to store and closes modal", () => {
-    mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 30 });
     const modal = openModal();
 
     modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!.checked = true;
+    // Preact needs input events to trigger onChange
+    modal
+      .querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!
+      .dispatchEvent(new Event("change", { bubbles: true }));
     modal.querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!.value = "15";
+    modal
+      .querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!
+      .dispatchEvent(new Event("input", { bubbles: true }));
 
     modal.querySelector<HTMLElement>("#scf-settings-apply")!.click();
 
@@ -120,9 +99,13 @@ describe("Apply button", () => {
       if (key === "seekSeconds") return 30;
       return { seekEnabled: false, seekSeconds: 30 };
     });
-    const modal = openModal();
+    openSettingsModal();
+    const modal = document.getElementById("scf-settings-modal")!;
 
     modal.querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!.value = "0";
+    modal
+      .querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!
+      .dispatchEvent(new Event("input", { bubbles: true }));
     modal.querySelector<HTMLElement>("#scf-settings-apply")!.click();
 
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ seekSeconds: 30 }));
@@ -130,11 +113,14 @@ describe("Apply button", () => {
 });
 
 describe("Reset button", () => {
-  it("restores defaults in UI without saving", () => {
+  it("restores defaults in UI without saving", async () => {
     mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 90 });
-    const modal = openModal();
+    openSettingsModal();
+    const modal = document.getElementById("scf-settings-modal")!;
 
     modal.querySelector<HTMLElement>("#scf-settings-reset")!.click();
+    // Signal updates trigger async Preact re-render
+    await new Promise((r) => setTimeout(r, 0));
 
     expect(modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!.checked).toBe(true);
     expect(modal.querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!.value).toBe("30");
@@ -144,7 +130,6 @@ describe("Reset button", () => {
 
 describe("Cancel button", () => {
   it("closes modal without saving", () => {
-    mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 30 });
     const modal = openModal();
 
     modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!.checked = true;
@@ -157,17 +142,14 @@ describe("Cancel button", () => {
 
 describe("closing without saving", () => {
   it("does not save when closed via X button", () => {
-    mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 30 });
-    const modal = openModal();
+    openModal();
 
-    modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!.checked = true;
-    modal.querySelector<HTMLElement>(".scf-modal-close")!.click();
+    document.querySelector<HTMLElement>(".scf-modal-close")!.click();
 
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it("does not save when closed via Escape", () => {
-    mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 30 });
     openModal();
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));

@@ -1,14 +1,10 @@
-import { filterStore, DEFAULT_FILTERS } from "../shared/storage";
+import { render } from "preact";
+import { filterStore } from "../shared/storage";
 import { createLogger } from "../shared/logger";
-import { openHelpModal } from "./help-modal";
-import {
-  FILTER_BAR_ID,
-  createFilterBar,
-  readFiltersFromUI,
-  restoreFiltersToUI,
-  wireUpInteractions,
-  isFeedPage,
-} from "./filter-bar";
+import type { FilterState } from "../shared/types";
+import { openHelpModal } from "./components/HelpModal";
+import { FilterBar } from "./components/FilterBar";
+import { isFeedPage, FILTER_BAR_ID } from "./filter-bar";
 import { injectPlayerControls } from "./player-controls";
 
 const log = createLogger("content-script");
@@ -20,11 +16,20 @@ script.src = chrome.runtime.getURL("injected.js");
 script.onload = () => script.remove();
 (document.head ?? document.documentElement).prepend(script);
 
-export function applyFiltersFromUI(bar: HTMLElement): void {
-  const filters = readFiltersFromUI(bar);
-  // filterStore.update() persists to localStorage and syncs to the injected
-  // script's filterStore via cross-realm postMessage — no manual bridge needed.
-  filterStore.update(filters);
+function renderFilterBar(container: HTMLElement, filters: FilterState): void {
+  render(
+    <FilterBar
+      initialFilters={filters}
+      storageAvailable={filterStore.isAvailable()}
+      onApply={(f) => filterStore.update(f)}
+      onApplyReload={(f) => {
+        filterStore.update(f);
+        location.reload();
+      }}
+      onHelp={openHelpModal}
+    />,
+    container,
+  );
 }
 
 export function injectFilterUI(): boolean {
@@ -46,31 +51,12 @@ export function injectFilterUI(): boolean {
     cls: feedContainer.className,
   });
 
-  const bar = createFilterBar();
-  feedContainer.parentElement?.insertBefore(bar, feedContainer);
+  const container = document.createElement("div");
+  container.id = FILTER_BAR_ID;
+  feedContainer.parentElement?.insertBefore(container, feedContainer);
+
+  renderFilterBar(container, filterStore.get());
   log.debug("Filter bar injected into DOM");
-
-  const filters = filterStore.get();
-  restoreFiltersToUI(bar, filters);
-
-  const storageAvailable = filterStore.isAvailable();
-  if (!storageAvailable) {
-    const reloadBtn = bar.querySelector<HTMLButtonElement>("#scf-apply-reload");
-    if (reloadBtn) {
-      reloadBtn.disabled = true;
-      reloadBtn.title = "localStorage is blocked — filters cannot persist across reloads";
-    }
-  }
-
-  wireUpInteractions(bar, {
-    onApply: applyFiltersFromUI,
-    onApplyReload: (bar) => {
-      applyFiltersFromUI(bar);
-      location.reload();
-    },
-    onClear: (bar) => restoreFiltersToUI(bar, DEFAULT_FILTERS),
-    onHelp: openHelpModal,
-  });
 
   return true;
 }

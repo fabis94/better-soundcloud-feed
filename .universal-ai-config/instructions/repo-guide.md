@@ -11,7 +11,7 @@ Manifest V3 browser extension (Chrome/Edge/Firefox) that filters SoundCloud's `/
 
 Two entry points, each built as separate IIFE bundles via Vite Environments API:
 
-- **Content script** (`src/content-script/`) — runs in isolated world. Injects filter UI into the feed page DOM, injects player controls into SC's player bar, and injects `injected.js` into the page context via `<script>` tag.
+- **Content script** (`src/content-script/`) — runs in isolated world. UI components are Preact functional components (`.tsx`) with `@preact/signals` for reactivity in `src/content-script/components/`. Injects filter UI into the feed page DOM, injects player controls into SC's player bar, and injects `injected.js` into the page context via `<script>` tag.
 - **Injected script** (`src/injected/`) — runs in page context (main world). Monkey-patches `window.fetch` and `XMLHttpRequest` to intercept and filter SC API responses. Discovers SC's internal player API from webpack module cache and handles playback commands.
 
 Communication between the two: `window.postMessage` bridge with typed `BridgeMessage` union (`SC_FILTER_READY`, `SC_PLAYER_READY`, `SC_PLAYER_COMMAND`) and `ReactiveStore` cross-realm sync (`SC_STORE_SYNC`).
@@ -58,6 +58,8 @@ This is why `SC_FILTER_UPDATE` doesn't exist — filter sync is handled entirely
 - **SC API types are `PartialDeep`**. SoundCloud's API is undocumented and can change without notice. Raw types (`SCRaw*`) are internal; exported types use `PartialDeep` from type-fest. Always use `?.` when accessing SC data fields. Code must gracefully handle missing/malformed data.
 - **IIFE output only**. Content scripts cannot use ES modules. Both entries build as IIFE via Vite Environments API with `consumer: "client"` on the injected environment to bundle node_modules.
 - **No top-level await**. Content scripts don't support it. LogTape uses `configureSync`.
+- **Preact, not Custom Elements**. Content script isolated worlds don't have access to `customElements` API. All UI uses Preact (`render()` into plain DOM nodes) with `@preact/signals` for fine-grained reactivity. No Shadow DOM, no web components. tsconfig requires `"jsx": "react-jsx"` and `"jsxImportSource": "preact"`.
+- **Multiple Preact render roots**. Each injection site (filter bar, modals, player buttons) gets its own `render()` call to its own container element. There is no single app root.
 - **SC CSS variables for theming**. Never use hardcoded colors in `filter-ui.css`. Use SoundCloud's own CSS variables (see docblock in that file) for light/dark theme support.
 - **Explicit apply workflow** for filters. Filters are only persisted and sent to the injected script when the user clicks Apply or Apply & Reload. UI-only changes (mode toggle, operator pill) don't auto-apply.
 - **Instant apply for settings**. Extension settings (e.g. skip-forward toggle) take effect immediately via `settingsStore.subscribe()`.
@@ -106,8 +108,17 @@ SVG icons are stored as `.svg` files and imported via `?raw` suffix (Vite inline
 ```
 src/
   content-script/          # UI injection, DOM interaction
-    player-controls/       # Player bar button injection + settings
+    components/            # Preact functional components (.tsx)
+      Modal.tsx            # Reusable modal (backdrop, dialog, close)
+      HelpModal.tsx        # In-app help content
+      SettingsModal.tsx    # Playback settings form
+      SettingsButton.tsx   # Gear icon for player bar
+      FilterBar.tsx        # Feed filter UI (largest component)
+      SeekButton.tsx       # Player seek forward/backward button
+    player-controls/       # Player bar injection orchestration
       icons/               # SVG icons (imported via ?raw)
+    filter-bar.ts          # Pure functions (formatActivityType, isFeedPage)
+    signals.ts             # Shared signals (playerReady)
   injected/                # fetch/XHR monkey-patching, player discovery, command handling
   shared/
     types/                 # Modular type definitions (sc-api, filters, bridge, player, settings)
@@ -122,9 +133,12 @@ Tests are colocated with the files they test (e.g., `filters.test.ts` next to `f
 ## Conventions
 
 - `SCActivityType` const object is the single source of truth for activity types. Derive arrays via `Object.values()`, labels via `formatActivityType()`.
-- Keep content script `index.ts` lean — extract complex features into separate files/directories.
+- Keep content script `index.tsx` lean — extract complex features into components or separate files.
 - MutationObserver runs without debounce. Injection functions short-circuit via `getElementById` when already injected.
-- Generic `openModal()` utility (`src/content-script/modal.ts`) for all dialogs — backdrop, X close, click-outside, Escape key.
+- All UI components are Preact functional components in `src/content-script/components/`. Use `useSignal()` from `@preact/signals` for local reactive state.
+- `Modal` component + `mountModal()` helper for all dialogs — imperative mount/unmount pattern. `mountModal` creates a container div, appends to body, renders into it, returns an unmount function. Escape key handling is in `mountModal`, not the component.
+- SVG icons: import via `?raw` and render with `dangerouslySetInnerHTML={{ __html: svgString }}`.
+- Shared cross-component state (e.g. `playerReady`) lives in `src/content-script/signals.ts` as exported signals.
 - CSS classes use `scf-` prefix to avoid collisions with SC's own classes.
 - Bridge message types are a discriminated union (`BridgeMessage`) in `src/shared/types/bridge.ts`. Extend `PlayerCommand` union for new playback actions.
 - New persistent state → new `ReactiveStore` instance. One line, full reactivity.

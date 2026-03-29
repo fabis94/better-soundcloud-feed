@@ -2,9 +2,11 @@ import type { KnipConfig } from "knip";
 
 const config: KnipConfig = ({ production }) => ({
   entry: production
-    ? ["src/content-script/index.ts!", "src/injected/index.ts!"]
-    : ["src/content-script/index.ts", "src/injected/index.ts", "src/**/*.test.ts"],
-  project: production ? ["src/**/*.ts!", "!src/**/*.test.ts", "!src/test/**"] : ["src/**/*.ts"],
+    ? ["src/content-script/index.tsx!", "src/injected/index.ts!"]
+    : ["src/content-script/index.tsx", "src/injected/index.ts", "src/**/*.test.{ts,tsx}"],
+  project: production
+    ? ["src/**/*.{ts,tsx}!", "!src/**/*.test.{ts,tsx}", "!src/test/**"]
+    : ["src/**/*.{ts,tsx}"],
   tags: ["-knipignore"],
   ignoreBinaries: [
     "web-ext", // used via npx in CI workflow, not a project dependency

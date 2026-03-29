@@ -3,10 +3,11 @@ import { resolve } from "node:path";
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 
 const root = import.meta.dirname;
-const isDev = process.argv.includes("--watch");
+const isDev = process.argv.includes("--mode") && process.argv.includes("development");
 
 const iife = {
-  sourcemap: true as const,
+  sourcemap: isDev ? ("inline" as const) : (true as const),
+  minify: !isDev,
   target: "chrome120" as const,
 };
 
@@ -24,7 +25,7 @@ export default defineConfig({
         emptyOutDir: false,
         ...iife,
         rolldownOptions: {
-          input: { "content-script": resolve(root, "src/content-script/index.ts") },
+          input: { "content-script": resolve(root, "src/content-script/index.tsx") },
           output: { format: "iife", entryFileNames: "[name].js" },
         },
       },
@@ -72,6 +73,6 @@ export default defineConfig({
     },
   ],
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });
