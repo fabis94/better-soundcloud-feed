@@ -82,7 +82,7 @@ jobs:
 
       - name: Submit to AMO
         run: |
-          npx web-ext sign \
+          npx web-ext submit \
             --channel listed \
             --source-dir dist \
             --api-key "${{ secrets.AMO_API_KEY }}" \
