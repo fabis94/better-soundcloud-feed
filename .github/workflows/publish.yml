@@ -70,7 +70,6 @@ jobs:
             "$CHROME_API/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish"
 
   publish-firefox:
-    if: false
     needs: build
     runs-on: ubuntu-latest
     steps:
