@@ -26,4 +26,12 @@ export interface SeekBackwardCommand {
   action: "seekBackward";
 }
 
-export type BridgeMessage = FilterReadyMessage | PlayerReadyMessage | PlayerCommandMessage;
+export interface PipSupportedMessage {
+  type: "SC_PIP_SUPPORTED";
+}
+
+export type BridgeMessage =
+  | FilterReadyMessage
+  | PlayerReadyMessage
+  | PlayerCommandMessage
+  | PipSupportedMessage;

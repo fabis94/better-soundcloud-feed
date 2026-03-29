@@ -1,7 +1,7 @@
 import { render, type VNode } from "preact";
 import type { BridgeMessage } from "../../shared/types";
 import { settingsStore } from "../../shared/settings-store";
-import { playerReady } from "../signals";
+import { playerReady, pipSupported } from "../signals";
 import { SeekButton } from "../components/SeekButton";
 import { SettingsButton } from "../components/SettingsButton";
 
@@ -58,17 +58,25 @@ function onPlayerReady(): void {
   renderAll();
 }
 
-function registerPlayerReadyListener(): void {
+function onPipSupported(): void {
+  pipSupported.value = true;
+}
+
+function registerListeners(): void {
   if (listenerRegistered) return;
   listenerRegistered = true;
 
   if (document.documentElement.dataset["scfPlayerReady"] === "true") {
     onPlayerReady();
   }
+  if (document.documentElement.dataset["scfPipSupported"] === "true") {
+    onPipSupported();
+  }
 
   window.addEventListener("message", (e: MessageEvent<BridgeMessage>) => {
-    if (e.source !== window || e.data?.type !== "SC_PLAYER_READY") return;
-    onPlayerReady();
+    if (e.source !== window) return;
+    if (e.data?.type === "SC_PLAYER_READY") onPlayerReady();
+    if (e.data?.type === "SC_PIP_SUPPORTED") onPipSupported();
   });
 
   settingsStore.subscribe(() => renderAll());
@@ -87,7 +95,7 @@ function insertAfter(parent: Element, newChild: Element, reference: Element | nu
  * Idempotent — short-circuits if already injected. Called from MutationObserver.
  */
 export function injectPlayerControls(): boolean {
-  registerPlayerReadyListener();
+  registerListeners();
 
   if (document.getElementById(CONTROLS_ID)) return true;
 

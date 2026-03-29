@@ -4,6 +4,7 @@ import { settingsStore } from "../shared/settings-store";
 import { createLogger } from "../shared/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
 import { discoverPlayer } from "./player";
+import { setupAutoPip } from "./pip";
 
 const log = createLogger("injected");
 
@@ -63,6 +64,18 @@ function handlePlayerCommand(cmd: PlayerCommand): void {
     document.documentElement.dataset["scfPlayerReady"] = "true";
     window.postMessage({ type: "SC_PLAYER_READY" }, "*");
   });
+
+  // Detect Document PiP support
+  if ("documentPictureInPicture" in window) {
+    document.documentElement.dataset["scfPipSupported"] = "true";
+    window.postMessage({ type: "SC_PIP_SUPPORTED" }, "*");
+    log.info("Document Picture-in-Picture API is supported");
+
+    setupAutoPip(settingsStore.get("pipAutoEnabled"));
+    settingsStore.subscribe((settings) => {
+      setupAutoPip(settings.pipAutoEnabled);
+    });
+  }
 
   // Signal readiness
   window.postMessage({ type: "SC_FILTER_READY" }, "*");

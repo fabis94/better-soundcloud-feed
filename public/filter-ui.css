@@ -429,3 +429,23 @@ div.stream__filter {
   height: 16px;
   cursor: pointer;
 }
+
+.scf-toggle-row-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
+
+.scf-help-text {
+  color: var(--secondary-color);
+  font-size: 11px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.scf-help-text code {
+  background: var(--surface-color);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+}

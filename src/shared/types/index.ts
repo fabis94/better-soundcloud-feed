@@ -26,6 +26,7 @@ export type {
   PlayerCommand,
   SeekForwardCommand,
   SeekBackwardCommand,
+  PipSupportedMessage,
 } from "./bridge";
 
 /** @knipignore SC player API surface — complete set */

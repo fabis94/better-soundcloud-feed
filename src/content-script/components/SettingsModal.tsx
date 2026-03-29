@@ -2,6 +2,7 @@ import { useSignal } from "@preact/signals";
 import { Modal, mountModal } from "./Modal";
 import { settingsStore } from "../../shared/settings-store";
 import { DEFAULT_SETTINGS } from "../../shared/types";
+import { pipSupported } from "../signals";
 
 const SETTINGS_MODAL_ID = "scf-settings-modal";
 
@@ -9,16 +10,23 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
   const settings = settingsStore.get();
   const seekEnabled = useSignal(settings.seekEnabled);
   const seekSeconds = useSignal(settings.seekSeconds);
+  const pipAutoEnabled = useSignal(settings.pipAutoEnabled);
+  const isPipSupported = pipSupported.value;
 
   const onApply = () => {
     const seconds = seekSeconds.value > 0 ? seekSeconds.value : settingsStore.get("seekSeconds");
-    settingsStore.update({ seekEnabled: seekEnabled.value, seekSeconds: seconds });
+    settingsStore.update({
+      seekEnabled: seekEnabled.value,
+      seekSeconds: seconds,
+      pipAutoEnabled: pipAutoEnabled.value,
+    });
     onClose();
   };
 
   const onReset = () => {
     seekEnabled.value = DEFAULT_SETTINGS.seekEnabled;
     seekSeconds.value = DEFAULT_SETTINGS.seekSeconds;
+    pipAutoEnabled.value = DEFAULT_SETTINGS.pipAutoEnabled;
   };
 
   return (
@@ -48,6 +56,27 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
             onInput={(e) =>
               (seekSeconds.value = parseInt((e.target as HTMLInputElement).value, 10) || 0)
             }
+          />
+        </label>
+      </section>
+      <section class="scf-modal-section">
+        <h3>Picture-in-Picture</h3>
+        {!isPipSupported && (
+          <p class="scf-help-text">
+            Document Picture-in-Picture is not supported in this browser. Chrome 116+ and Edge 116+
+            support it natively. Firefox 148+ requires enabling <code>dom.documentpip.enabled</code>{" "}
+            in <code>about:config</code>.
+          </p>
+        )}
+        <label class={`scf-toggle-row${!isPipSupported ? " scf-toggle-row-disabled" : ""}`}>
+          <span>Auto-open PiP on tab switch</span>
+          <input
+            type="checkbox"
+            class="scf-toggle"
+            id="scf-setting-pip-auto"
+            checked={pipAutoEnabled.value}
+            disabled={!isPipSupported}
+            onChange={(e) => (pipAutoEnabled.value = (e.target as HTMLInputElement).checked)}
           />
         </label>
       </section>
