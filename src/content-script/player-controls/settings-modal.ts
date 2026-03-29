@@ -24,24 +24,24 @@ export function updateSettingsButton(el: HTMLElement, playerReady: boolean): voi
 }
 
 function readSettingsFromUI(container: HTMLElement): ExtensionSettings | null {
-  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-skip-forward");
-  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-skip-seconds");
+  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-seek-enabled");
+  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-seek-seconds");
   if (!toggle || !secondsInput) return null;
 
   const val = parseInt(secondsInput.value, 10);
   return {
-    skipForwardEnabled: toggle.checked,
-    skipForwardSeconds: val > 0 ? val : settingsStore.get("skipForwardSeconds"),
+    seekEnabled: toggle.checked,
+    seekSeconds: val > 0 ? val : settingsStore.get("seekSeconds"),
   };
 }
 
 function restoreSettingsToUI(container: HTMLElement, settings: ExtensionSettings): void {
-  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-skip-forward");
-  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-skip-seconds");
+  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-seek-enabled");
+  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-seek-seconds");
   if (!toggle || !secondsInput) return;
 
-  toggle.checked = settings.skipForwardEnabled;
-  secondsInput.value = String(settings.skipForwardSeconds);
+  toggle.checked = settings.seekEnabled;
+  secondsInput.value = String(settings.seekSeconds);
 }
 
 function openSettingsModal(): void {
@@ -50,15 +50,15 @@ function openSettingsModal(): void {
     title: "Better SC Feed Playback Settings",
     content: `
       <section class="scf-modal-section">
-        <h3>Seek Forward</h3>
+        <h3>Seek Playback</h3>
         <label class="scf-toggle-row">
-          <span>Enable Skip Forward Button</span>
-          <input type="checkbox" class="scf-toggle" id="scf-setting-skip-forward">
+          <span>Enable Seek Buttons</span>
+          <input type="checkbox" class="scf-toggle" id="scf-setting-seek-enabled">
         </label>
         <label class="scf-toggle-row">
-          <span>Seconds to seek forward</span>
+          <span>Seconds to seek</span>
           <input type="number" class="scf-input scf-input-small"
-                 id="scf-setting-skip-seconds" min="1" max="300" step="1">
+                 id="scf-setting-seek-seconds" min="1" max="300" step="1">
         </label>
       </section>
       <div class="scf-actions">

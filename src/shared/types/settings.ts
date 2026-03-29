@@ -1,9 +1,9 @@
 export interface ExtensionSettings {
-  skipForwardEnabled: boolean;
-  skipForwardSeconds: number;
+  seekEnabled: boolean;
+  seekSeconds: number;
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
-  skipForwardEnabled: true,
-  skipForwardSeconds: 30,
+  seekEnabled: true,
+  seekSeconds: 30,
 };

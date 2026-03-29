@@ -34,8 +34,8 @@ vi.mock("../shared/storage", () => ({
 vi.mock("../shared/settings-store", () => ({
   settingsStore: {
     get: (key?: string) => {
-      if (key === "skipForwardSeconds") return 30;
-      return { skipForwardEnabled: false, skipForwardSeconds: 30 };
+      if (key === "seekSeconds") return 30;
+      return { seekEnabled: false, seekSeconds: 30 };
     },
     update: vi.fn(),
     subscribe: vi.fn(() => () => {}),
@@ -87,7 +87,7 @@ describe("injected module", () => {
         new MessageEvent("message", {
           data: {
             type: "SC_PLAYER_COMMAND",
-            payload: { action: "skipForward" },
+            payload: { action: "seekForward" },
           },
           source: window,
         }),

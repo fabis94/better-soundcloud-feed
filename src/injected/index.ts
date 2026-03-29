@@ -8,17 +8,26 @@ import { discoverPlayer } from "./player";
 const log = createLogger("injected");
 
 function handlePlayerCommand(cmd: PlayerCommand): void {
+  const sound = window.scPlayer?.getCurrentSound?.();
+  if (!sound) return;
+  const position = sound.player?.getPosition?.() ?? 0;
+  const duration = sound.player?.getDuration?.() ?? 0;
+  const amount = settingsStore.get("seekSeconds") * 1000;
+
   switch (cmd.action) {
-    case "skipForward": {
-      const sound = window.scPlayer?.getCurrentSound?.();
-      if (!sound) return;
-      const position = sound.player?.getPosition?.() ?? 0;
-      const duration = sound.player?.getDuration?.() ?? 0;
-      const amount = settingsStore.get("skipForwardSeconds") * 1000;
+    case "seekForward": {
       if (duration > 0 && position + amount > duration * 0.9) {
         window.scPlayer?.playNext?.();
       } else {
         window.scPlayer?.seekCurrentBy?.(() => amount);
+      }
+      break;
+    }
+    case "seekBackward": {
+      if (duration > 0 && position - amount < duration * 0.1) {
+        window.scPlayer?.playPrev?.();
+      } else {
+        window.scPlayer?.seekCurrentBy?.(() => -amount);
       }
       break;
     }

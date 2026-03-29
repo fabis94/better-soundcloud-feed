@@ -121,8 +121,6 @@ Tests are colocated with the files they test (e.g., `filters.test.ts` next to `f
 
 ## Conventions
 
-- **README.md is user-facing only** — features, setup, usage. Keep architectural details, internal patterns, and implementation notes in this repo guide. No duplication between the two.
-- **`extension-description.txt`** is the source of truth for Chrome Web Store, Firefox Add-ons, and Edge Add-ons listing descriptions. Plain text only (no markdown/HTML) — simple bullet lists (• prefix) are OK. User-facing and sales-oriented, no internal details. Update it alongside `README.md` whenever user-visible features change.
 - `SCActivityType` const object is the single source of truth for activity types. Derive arrays via `Object.values()`, labels via `formatActivityType()`.
 - Keep content script `index.ts` lean — extract complex features into separate files/directories.
 - MutationObserver runs without debounce. Injection functions short-circuit via `getElementById` when already injected.

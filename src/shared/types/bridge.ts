@@ -16,10 +16,14 @@ export interface PlayerCommandMessage {
 }
 
 /** Discriminated union of player commands. Extend with new actions as needed. */
-export type PlayerCommand = SkipForwardCommand;
+export type PlayerCommand = SeekForwardCommand | SeekBackwardCommand;
 
-export interface SkipForwardCommand {
-  action: "skipForward";
+export interface SeekForwardCommand {
+  action: "seekForward";
+}
+
+export interface SeekBackwardCommand {
+  action: "seekBackward";
 }
 
 export type BridgeMessage = FilterReadyMessage | PlayerReadyMessage | PlayerCommandMessage;

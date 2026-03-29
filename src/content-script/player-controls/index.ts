@@ -1,10 +1,21 @@
 import type { BridgeMessage } from "../../shared/types";
 import { settingsStore } from "../../shared/settings-store";
-import { createSkipButton, updateSkipButton, SKIP_BTN_ID } from "./skip-button";
+import {
+  createSeekForwardButton,
+  createSeekBackwardButton,
+  updateSeekButton,
+  SEEK_FWD_BTN_ID,
+  SEEK_BWD_BTN_ID,
+} from "./seek-buttons";
 import { createSettingsButton, updateSettingsButton, SETTINGS_BTN_ID } from "./settings-modal";
 
 let playerReady = false;
 let listenerRegistered = false;
+
+function updateSeekBtn(id: string, visible: boolean): void {
+  const btn = document.getElementById(id) as HTMLButtonElement | null;
+  if (btn) updateSeekButton(btn, { visible, playerReady });
+}
 
 function onPlayerReady(): void {
   playerReady = true;
@@ -12,13 +23,9 @@ function onPlayerReady(): void {
   const settingsEl = document.getElementById(SETTINGS_BTN_ID);
   if (settingsEl) updateSettingsButton(settingsEl, true);
 
-  const skipBtn = document.getElementById(SKIP_BTN_ID) as HTMLButtonElement | null;
-  if (skipBtn) {
-    updateSkipButton(skipBtn, {
-      visible: settingsStore.get("skipForwardEnabled"),
-      playerReady: true,
-    });
-  }
+  const visible = settingsStore.get("seekEnabled");
+  updateSeekBtn(SEEK_FWD_BTN_ID, visible);
+  updateSeekBtn(SEEK_BWD_BTN_ID, visible);
 }
 
 function registerPlayerReadyListener(): void {
@@ -58,25 +65,30 @@ export function injectPlayerControls(): boolean {
   }
   updateSettingsButton(settingsBtn, playerReady);
 
-  // Skip-forward button: after the next-track button
-  const nextBtn = elements.querySelector(".playControls__next");
-  const skipBtn = createSkipButton();
-  if (nextBtn?.nextSibling) {
-    elements.insertBefore(skipBtn, nextBtn.nextSibling);
-  } else if (nextBtn) {
-    elements.appendChild(skipBtn);
+  const seekVisible = settingsStore.get("seekEnabled");
+
+  // Seek-backward button: before the prev-track button
+  const prevBtn = elements.querySelector(".playControls__prev");
+  const seekBwdBtn = createSeekBackwardButton();
+  if (prevBtn) {
+    elements.insertBefore(seekBwdBtn, prevBtn);
   }
-  updateSkipButton(skipBtn, {
-    visible: settingsStore.get("skipForwardEnabled"),
-    playerReady,
-  });
+  updateSeekButton(seekBwdBtn, { visible: seekVisible, playerReady });
+
+  // Seek-forward button: after the next-track button
+  const nextBtn = elements.querySelector(".playControls__next");
+  const seekFwdBtn = createSeekForwardButton();
+  if (nextBtn?.nextSibling) {
+    elements.insertBefore(seekFwdBtn, nextBtn.nextSibling);
+  } else if (nextBtn) {
+    elements.appendChild(seekFwdBtn);
+  }
+  updateSeekButton(seekFwdBtn, { visible: seekVisible, playerReady });
 
   // React to settings changes
   settingsStore.subscribe((settings) => {
-    const btn = document.getElementById(SKIP_BTN_ID) as HTMLButtonElement | null;
-    if (btn) {
-      updateSkipButton(btn, { visible: settings.skipForwardEnabled, playerReady });
-    }
+    updateSeekBtn(SEEK_FWD_BTN_ID, settings.seekEnabled);
+    updateSeekBtn(SEEK_BWD_BTN_ID, settings.seekEnabled);
   });
 
   return true;

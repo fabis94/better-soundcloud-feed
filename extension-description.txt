@@ -21,7 +21,7 @@ Changes only take effect when you click Apply or Apply & Reload, so you can twea
 
 PLAYER CONTROLS
 
-• Skip forward — a button in the player bar that skips 30 seconds ahead, or jumps to the next track if you're near the end. Toggle it on/off and customize the skip duration in extension settings.
+• Seek forward / backward — two buttons in the player bar that jump forward or backward by a configurable number of seconds (default 30). If you're near the end of a track, seeking forward skips to the next track; near the start, seeking backward goes to the previous track. Toggle them on/off and customize the seek duration in extension settings.
 • Settings — a gear icon in the player bar that opens the extension settings dialog.
 
 A built-in help button (?) explains all features and search syntax right inside the extension.

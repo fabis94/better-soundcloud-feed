@@ -24,7 +24,8 @@ export type {
   PlayerReadyMessage,
   PlayerCommandMessage,
   PlayerCommand,
-  SkipForwardCommand,
+  SeekForwardCommand,
+  SeekBackwardCommand,
 } from "./bridge";
 
 /** @knipignore SC player API surface — complete set */

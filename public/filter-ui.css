@@ -380,12 +380,14 @@ div.stream__filter {
 }
 
 /* Player bar controls */
-.scf-skip-forward,
+.scf-seek-forward,
+.scf-seek-backward,
 .scf-settings-btn {
   color: var(--primary-color);
 }
 
-.scf-skip-forward svg {
+.scf-seek-forward svg,
+.scf-seek-backward svg {
   width: 24px;
   height: 24px;
 }

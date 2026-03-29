@@ -66,17 +66,17 @@ const HELP_HTML = `
       <h2>Playback</h2>
 
       <section class="scf-modal-section">
-        <h3>Skip Forward</h3>
-        <p>A button in the player bar that jumps forward in the current track by a configurable number of seconds (default 30).</p>
-        <p>If skipping would land past 90% of the track, it plays the next track instead.</p>
+        <h3>Seek Forward / Backward</h3>
+        <p>Two buttons in the player bar that jump forward or backward in the current track by a configurable number of seconds (default 30).</p>
+        <p>If seeking forward would land past 90% of the track, it plays the next track. If seeking backward would land before 10%, it plays the previous track.</p>
       </section>
 
       <section class="scf-modal-section">
         <h3>Playback Settings</h3>
         <p>Click the gear icon in the player bar to open the settings modal:</p>
         <ul>
-          <li><strong>Enable Skip Forward Button</strong> &mdash; show or hide the skip button in the player bar</li>
-          <li><strong>Seconds to seek forward</strong> &mdash; how far the skip button jumps (1&ndash;300 seconds)</li>
+          <li><strong>Enable Seek Buttons</strong> &mdash; show or hide the seek buttons in the player bar</li>
+          <li><strong>Seconds to seek</strong> &mdash; how far each seek button jumps (1&ndash;300 seconds)</li>
         </ul>
         <p>Click <strong>Apply</strong> to save, <strong>Reset</strong> to restore defaults, or <strong>Cancel</strong> to discard changes.</p>
       </section>
