@@ -10,7 +10,6 @@ vi.mock("../../shared/logger", () => ({
   }),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockGet = vi.fn((_key?: string): unknown => false);
 const mockUpdate = vi.fn();
 vi.mock("../../shared/settings-store", () => ({
@@ -24,6 +23,13 @@ vi.mock("../../shared/settings-store", () => ({
 }));
 
 import { createSettingsButton, updateSettingsButton } from "./settings-modal";
+
+function openModal() {
+  const btn = createSettingsButton();
+  document.body.appendChild(btn);
+  btn.click();
+  return document.getElementById("scf-settings-modal")!;
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -46,12 +52,9 @@ describe("createSettingsButton", () => {
   });
 
   it("opens settings modal on click", () => {
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    const modal = document.getElementById("scf-settings-modal");
+    const modal = openModal();
     expect(modal).not.toBeNull();
-    expect(modal!.querySelector(".scf-modal-title")!.textContent).toBe(
+    expect(modal.querySelector(".scf-modal-title")!.textContent).toBe(
       "Better SC Feed Playback Settings",
     );
   });
@@ -79,66 +82,96 @@ describe("updateSettingsButton", () => {
   });
 });
 
-describe("settings modal toggle", () => {
+describe("settings modal initial state", () => {
   it("reads current skipForwardEnabled state", () => {
-    mockGet.mockReturnValue(true);
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    const toggle = document.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!;
+    mockGet.mockReturnValue({ skipForwardEnabled: true, skipForwardSeconds: 30 });
+    const modal = openModal();
+    const toggle = modal.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!;
     expect(toggle.checked).toBe(true);
   });
 
-  it("calls settingsStore.update when toggle changes", () => {
-    mockGet.mockReturnValue(false);
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    const toggle = document.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!;
-    toggle.checked = true;
-    toggle.dispatchEvent(new Event("change"));
-    expect(mockUpdate).toHaveBeenCalledWith({ skipForwardEnabled: true });
+  it("reads current skipForwardSeconds value", () => {
+    mockGet.mockReturnValue({ skipForwardEnabled: false, skipForwardSeconds: 45 });
+    const modal = openModal();
+    const input = modal.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!;
+    expect(input.value).toBe("45");
   });
 });
 
-describe("settings modal seconds input", () => {
-  it("reads current skipForwardSeconds value", () => {
-    mockGet.mockImplementation((key?: string) => {
-      if (key === "skipForwardSeconds") return 45;
-      return false;
+describe("Apply button", () => {
+  it("saves settings to store and closes modal", () => {
+    mockGet.mockReturnValue({ skipForwardEnabled: false, skipForwardSeconds: 30 });
+    const modal = openModal();
+
+    modal.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!.checked = true;
+    modal.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!.value = "15";
+
+    modal.querySelector<HTMLElement>("#scf-settings-apply")!.click();
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      skipForwardEnabled: true,
+      skipForwardSeconds: 15,
     });
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    const input = document.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!;
-    expect(input.value).toBe("45");
+    expect(document.getElementById("scf-settings-modal")).toBeNull();
   });
 
-  it("calls settingsStore.update when seconds value changes", () => {
+  it("falls back to stored seconds for invalid values", () => {
     mockGet.mockImplementation((key?: string) => {
       if (key === "skipForwardSeconds") return 30;
-      return false;
+      return { skipForwardEnabled: false, skipForwardSeconds: 30 };
     });
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    const input = document.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!;
-    input.value = "15";
-    input.dispatchEvent(new Event("change"));
-    expect(mockUpdate).toHaveBeenCalledWith({ skipForwardSeconds: 15 });
+    const modal = openModal();
+
+    modal.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!.value = "0";
+    modal.querySelector<HTMLElement>("#scf-settings-apply")!.click();
+
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ skipForwardSeconds: 30 }));
+  });
+});
+
+describe("Reset button", () => {
+  it("restores defaults in UI without saving", () => {
+    mockGet.mockReturnValue({ skipForwardEnabled: false, skipForwardSeconds: 90 });
+    const modal = openModal();
+
+    modal.querySelector<HTMLElement>("#scf-settings-reset")!.click();
+
+    expect(modal.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!.checked).toBe(true);
+    expect(modal.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!.value).toBe("30");
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("Cancel button", () => {
+  it("closes modal without saving", () => {
+    mockGet.mockReturnValue({ skipForwardEnabled: false, skipForwardSeconds: 30 });
+    const modal = openModal();
+
+    modal.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!.checked = true;
+    modal.querySelector<HTMLElement>("#scf-settings-cancel")!.click();
+
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(document.getElementById("scf-settings-modal")).toBeNull();
+  });
+});
+
+describe("closing without saving", () => {
+  it("does not save when closed via X button", () => {
+    mockGet.mockReturnValue({ skipForwardEnabled: false, skipForwardSeconds: 30 });
+    const modal = openModal();
+
+    modal.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!.checked = true;
+    modal.querySelector<HTMLElement>(".scf-modal-close")!.click();
+
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
-  it("ignores invalid (non-positive) values", () => {
-    mockGet.mockImplementation((key?: string) => {
-      if (key === "skipForwardSeconds") return 30;
-      return false;
-    });
-    const btn = createSettingsButton();
-    document.body.appendChild(btn);
-    btn.click();
-    const input = document.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!;
-    input.value = "0";
-    input.dispatchEvent(new Event("change"));
+  it("does not save when closed via Escape", () => {
+    mockGet.mockReturnValue({ skipForwardEnabled: false, skipForwardSeconds: 30 });
+    openModal();
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

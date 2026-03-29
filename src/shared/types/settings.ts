@@ -4,6 +4,6 @@ export interface ExtensionSettings {
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
-  skipForwardEnabled: false,
+  skipForwardEnabled: true,
   skipForwardSeconds: 30,
 };

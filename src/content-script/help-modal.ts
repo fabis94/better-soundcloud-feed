@@ -78,7 +78,7 @@ const HELP_HTML = `
           <li><strong>Enable Skip Forward Button</strong> &mdash; show or hide the skip button in the player bar</li>
           <li><strong>Seconds to seek forward</strong> &mdash; how far the skip button jumps (1&ndash;300 seconds)</li>
         </ul>
-        <p>Settings take effect immediately &mdash; no Apply step needed.</p>
+        <p>Click <strong>Apply</strong> to save, <strong>Reset</strong> to restore defaults, or <strong>Cancel</strong> to discard changes.</p>
       </section>
 `;
 

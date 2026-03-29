@@ -1,5 +1,7 @@
 import { openModal } from "../modal";
 import { settingsStore } from "../../shared/settings-store";
+import { DEFAULT_SETTINGS } from "../../shared/types";
+import type { ExtensionSettings } from "../../shared/types";
 import settingsIcon from "./icons/settings.svg?raw";
 
 export const SETTINGS_BTN_ID = "scf-settings-btn";
@@ -21,6 +23,27 @@ export function updateSettingsButton(el: HTMLElement, playerReady: boolean): voi
   el.classList.toggle("scf-btn-disabled", !playerReady);
 }
 
+function readSettingsFromUI(container: HTMLElement): ExtensionSettings | null {
+  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-skip-forward");
+  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-skip-seconds");
+  if (!toggle || !secondsInput) return null;
+
+  const val = parseInt(secondsInput.value, 10);
+  return {
+    skipForwardEnabled: toggle.checked,
+    skipForwardSeconds: val > 0 ? val : settingsStore.get("skipForwardSeconds"),
+  };
+}
+
+function restoreSettingsToUI(container: HTMLElement, settings: ExtensionSettings): void {
+  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-skip-forward");
+  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-skip-seconds");
+  if (!toggle || !secondsInput) return;
+
+  toggle.checked = settings.skipForwardEnabled;
+  secondsInput.value = String(settings.skipForwardSeconds);
+}
+
 function openSettingsModal(): void {
   const container = openModal({
     id: SETTINGS_MODAL_ID,
@@ -38,25 +61,29 @@ function openSettingsModal(): void {
                  id="scf-setting-skip-seconds" min="1" max="300" step="1">
         </label>
       </section>
+      <div class="scf-actions">
+        <button type="button" class="scf-btn scf-btn-primary" id="scf-settings-apply">Apply</button>
+        <button type="button" class="scf-btn scf-btn-secondary" id="scf-settings-reset">Reset</button>
+        <button type="button" class="scf-btn scf-btn-secondary" id="scf-settings-cancel">Cancel</button>
+      </div>
     `,
   });
 
   if (!container) return;
 
-  const toggle = container.querySelector<HTMLInputElement>("#scf-setting-skip-forward")!;
-  toggle.checked = settingsStore.get("skipForwardEnabled");
+  restoreSettingsToUI(container, settingsStore.get());
 
-  toggle.addEventListener("change", () => {
-    settingsStore.update({ skipForwardEnabled: toggle.checked });
+  container.querySelector<HTMLElement>("#scf-settings-apply")!.addEventListener("click", () => {
+    const settings = readSettingsFromUI(container);
+    if (settings) settingsStore.update(settings);
+    container.remove();
   });
 
-  const secondsInput = container.querySelector<HTMLInputElement>("#scf-setting-skip-seconds")!;
-  secondsInput.value = String(settingsStore.get("skipForwardSeconds"));
+  container.querySelector<HTMLElement>("#scf-settings-reset")!.addEventListener("click", () => {
+    restoreSettingsToUI(container, DEFAULT_SETTINGS);
+  });
 
-  secondsInput.addEventListener("change", () => {
-    const val = parseInt(secondsInput.value, 10);
-    if (val > 0) {
-      settingsStore.update({ skipForwardSeconds: val });
-    }
+  container.querySelector<HTMLElement>("#scf-settings-cancel")!.addEventListener("click", () => {
+    container.remove();
   });
 }
