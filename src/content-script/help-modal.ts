@@ -1,6 +1,8 @@
 import { openModal } from "./modal";
 
 const HELP_HTML = `
+      <h2>Filters</h2>
+
       <section class="scf-modal-section">
         <h3>Activity Types</h3>
         <p>Toggle which types of feed items to show:</p>
@@ -60,8 +62,26 @@ const HELP_HTML = `
           <li><strong>Clear</strong> &mdash; resets the UI to defaults (does not auto-apply &mdash; click Apply to persist)</li>
         </ul>
       </section>
+
+      <h2>Playback</h2>
+
+      <section class="scf-modal-section">
+        <h3>Skip Forward</h3>
+        <p>A button in the player bar that jumps forward in the current track by a configurable number of seconds (default 30).</p>
+        <p>If skipping would land past 90% of the track, it plays the next track instead.</p>
+      </section>
+
+      <section class="scf-modal-section">
+        <h3>Playback Settings</h3>
+        <p>Click the gear icon in the player bar to open the settings modal:</p>
+        <ul>
+          <li><strong>Enable Skip Forward Button</strong> &mdash; show or hide the skip button in the player bar</li>
+          <li><strong>Seconds to seek forward</strong> &mdash; how far the skip button jumps (1&ndash;300 seconds)</li>
+        </ul>
+        <p>Settings take effect immediately &mdash; no Apply step needed.</p>
+      </section>
 `;
 
 export function openHelpModal(): void {
-  openModal({ id: "scf-help-modal", title: "Filter Help", content: HELP_HTML });
+  openModal({ id: "scf-help-modal", title: "Better SC Feed Help", content: HELP_HTML });
 }

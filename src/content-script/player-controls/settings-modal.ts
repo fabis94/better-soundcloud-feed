@@ -24,7 +24,7 @@ export function updateSettingsButton(el: HTMLElement, playerReady: boolean): voi
 function openSettingsModal(): void {
   const container = openModal({
     id: SETTINGS_MODAL_ID,
-    title: "Extension Settings",
+    title: "Better SC Feed Playback Settings",
     content: `
       <section class="scf-modal-section">
         <h3>Seek Forward</h3>

@@ -51,7 +51,9 @@ describe("createSettingsButton", () => {
     btn.click();
     const modal = document.getElementById("scf-settings-modal");
     expect(modal).not.toBeNull();
-    expect(modal!.querySelector(".scf-modal-title")!.textContent).toBe("Extension Settings");
+    expect(modal!.querySelector(".scf-modal-title")!.textContent).toBe(
+      "Better SC Feed Playback Settings",
+    );
   });
 
   it("does not open duplicate modals", () => {

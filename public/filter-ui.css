@@ -320,6 +320,20 @@ div.stream__filter {
   line-height: 1.5;
 }
 
+.scf-modal-body h2 {
+  margin: 0 0 var(--spacing-1x);
+  padding-bottom: var(--spacing-0_5x);
+  border-bottom: 1px solid var(--highlight-color);
+  font-size: var(--typography-heading4-font-size);
+  font-weight: var(--typography-heading4-font-weight);
+  color: var(--special-color);
+}
+
+.scf-modal-body h2 + h2,
+.scf-modal-section + h2 {
+  margin-top: var(--spacing-3x);
+}
+
 .scf-modal-section {
   margin-bottom: var(--spacing-2x);
 }
