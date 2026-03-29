@@ -1,0 +1,39 @@
+SoundCloud's feed page is not very good, let's be honest. It gives you pretty much no filtering options so you end up having to scroll through tons of posts that you're not even interested in. Sure, you may unfollow profiles that you don't want to hear anything from, but this is a very simplistic use case - most DJs and producers are sometimes looking for mixes to listen to, sometimes new tracks to add to their mixcrate, sometimes they want one genre and sometimes another. All of the followed profiles are useful, just at different times!
+
+This extension solves the issue by adding a filtering panel above your SoundCloud feed and extra controls in the player bar.
+
+FEED FILTERS
+
+Activity types
+Choose what shows up: track posts, track reposts, or playlist posts. Unchecked types are filtered at the API level — they're never even loaded.
+
+Search
+Two modes:
+• Simple — a single search box that matches against title, description, genre, artist, and label
+• Extended — separate inputs for each field, so you can filter by genre without accidentally matching titles
+
+Search supports comma-separated terms, -exclusions, and *wildcard patterns. Toggle between AND (all terms must match) and OR (any term matches).
+
+Duration
+Set a minimum and/or maximum track length in minutes. Great for skipping intros, snippets, or marathon DJ sets.
+
+Changes only take effect when you click Apply or Apply & Reload, so you can tweak filters without losing your scroll position.
+
+PLAYER CONTROLS
+
+• Skip forward — a button in the player bar that skips 30 seconds ahead, or jumps to the next track if you're near the end. Toggle it on/off and customize the skip duration in extension settings.
+• Settings — a gear icon in the player bar that opens the extension settings dialog.
+
+A built-in help button (?) explains all features and search syntax right inside the extension.
+
+HOW IT WORKS
+The extension intercepts SoundCloud's API responses and filters them before the page renders. No content is removed from the DOM after loading — filtered items are never shown in the first place. Your filter settings persist across sessions.
+
+PRIVACY
+• No data collection
+• No external servers
+• No tracking
+• All filtering happens locally in your browser
+• Only permission used: storage (to save your filter preferences)
+
+Open source: https://github.com/fabis94/better-soundcloud-feed
