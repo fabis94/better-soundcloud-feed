@@ -58,16 +58,24 @@ jobs:
 
       - name: Upload package
         run: |
-          curl -f -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
             -T extension.zip \
-            "$CHROME_API/upload/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:upload"
+            "$CHROME_API/upload/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:upload")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+          if [ "$HTTP_CODE" -ge 400 ]; then echo "HTTP $HTTP_CODE"; exit 1; fi
 
       - name: Publish
         run: |
-          curl -f -X POST \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
-            "$CHROME_API/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish"
+            "$CHROME_API/v2/publishers/${{ secrets.CHROME_PUBLISHER_ID }}/items/${{ secrets.CHROME_EXTENSION_ID }}:publish")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+          if [ "$HTTP_CODE" -ge 400 ]; then echo "HTTP $HTTP_CODE"; exit 1; fi
 
   publish-firefox:
     needs: build
@@ -108,22 +116,25 @@ jobs:
             -H "Content-Type: application/zip" \
             -T extension.zip \
             "$EDGE_API/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package")
+          echo "$RESPONSE"
+          HTTP_CODE=$(echo "$RESPONSE" | head -1 | grep -oP '\d{3}')
           OPERATION_ID=$(echo "$RESPONSE" | grep -i '^location:' | tr -d '\r' | awk '{print $2}')
           echo "operation_id=$OPERATION_ID" >> "$GITHUB_OUTPUT"
+          if [ "$HTTP_CODE" -ge 400 ]; then echo "HTTP $HTTP_CODE"; exit 1; fi
 
       - name: Wait for upload to complete
         env:
           EDGE_API: https://api.addons.microsoftedge.microsoft.com
         run: |
           for i in $(seq 1 30); do
-            STATUS=$(curl -s \
+            BODY=$(curl -s \
               -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
               -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
-              "$EDGE_API/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package/operations/${{ steps.upload.outputs.operation_id }}" \
-              | jq -r '.status')
+              "$EDGE_API/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/package/operations/${{ steps.upload.outputs.operation_id }}")
+            STATUS=$(echo "$BODY" | jq -r '.status')
             echo "Attempt $i: status=$STATUS"
             if [ "$STATUS" = "Succeeded" ]; then exit 0; fi
-            if [ "$STATUS" = "Failed" ]; then echo "Upload failed"; exit 1; fi
+            if [ "$STATUS" = "Failed" ]; then echo "$BODY" | jq .; exit 1; fi
             sleep 5
           done
           echo "Timed out waiting for upload"
@@ -135,10 +146,14 @@ jobs:
           RELEASE_NOTES: ${{ github.event.release.body }}
         run: |
           NOTES=$(echo "$RELEASE_NOTES" | head -c 1900)
-          jq -n --arg notes "$NOTES" '{notes: $notes}' | \
-          curl -f -X POST \
+          RESPONSE=$(jq -n --arg notes "$NOTES" '{notes: $notes}' | \
+          curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
             -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
             -H "Content-Type: application/json" \
             -d @- \
-            "$EDGE_API/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions"
+            "$EDGE_API/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+          if [ "$HTTP_CODE" -ge 400 ]; then echo "HTTP $HTTP_CODE"; exit 1; fi
