@@ -62,10 +62,11 @@ Changes only take effect when the user clicks **Apply** or **Apply & Reload**.
 | Control             | Behavior                                                                                           |
 | ------------------- | -------------------------------------------------------------------------------------------------- |
 | **Settings button** | Gear icon in the player bar — opens extension settings dialog.                                     |
+| **PiP button**      | Toggles the Picture-in-Picture window open/closed. Enabled by default; can be hidden in settings.  |
 | **Seek forward**    | Seeks forward by configurable seconds (default 30), or skips to next track if near the end.        |
 | **Seek backward**   | Seeks backward by configurable seconds (default 30), or skips to previous track if near the start. |
 
-Seek buttons are enabled by default. Toggle and customize the seek duration in extension settings. Player controls appear greyed out until the player API is discovered, then become active.
+Seek and PiP buttons are enabled by default. Toggle and customize them in extension settings. Player controls appear greyed out until the player API is discovered, then become active.
 
 ### Picture-in-Picture
 
@@ -78,9 +79,12 @@ When you switch away from the SoundCloud tab, an always-on-top mini player appea
 - Like/unlike button (synced with SoundCloud)
 - Current time and total duration
 
-The PiP window closes automatically when you return to the SoundCloud tab. Requires Chrome 116+ or Edge 116+. Firefox 148+ supports it with `dom.documentpip.enabled` enabled in `about:config`.
+Requires Chrome 116+ or Edge 116+. Firefox 148+ supports it with `dom.documentpip.enabled` enabled in `about:config`.
 
-Auto-PiP is enabled by default. Toggle in the extension settings dialog.
+Configure PiP behaviour in extension settings:
+
+- **Auto-open PiP on tab switch** — enabled by default; browser manages the lifecycle (opens on tab leave, closes on tab return)
+- **Show PiP button in player** — manually toggle PiP open/closed from the player bar; enabled by default; manual PiP stays open until you close it
 
 ## License
 

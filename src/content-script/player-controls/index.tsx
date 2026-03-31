@@ -4,6 +4,7 @@ import { settingsStore } from "../../shared/stores/settings-store";
 import { playerReady, pipSupported } from "../signals";
 import { SeekButton } from "../components/SeekButton";
 import { SettingsButton } from "../components/SettingsButton";
+import { PipButton } from "../components/PipButton";
 
 const CONTROLS_ID = "scf-player-controls-injected";
 
@@ -19,6 +20,7 @@ interface ControlSlot {
 function getSlots(): ControlSlot[] {
   const ready = playerReady.value;
   const seekVisible = settingsStore.get("seekEnabled");
+  const pipVisible = settingsStore.get("pipButtonEnabled") && pipSupported.value;
 
   return [
     {
@@ -26,6 +28,12 @@ function getSlots(): ControlSlot[] {
       anchor: ".playControls__timeline",
       position: "after",
       render: () => <SettingsButton disabled={!ready} />,
+    },
+    {
+      id: "scf-pip-btn",
+      anchor: "#scf-settings-btn",
+      position: "after",
+      render: () => <PipButton visible={pipVisible} disabled={!ready} />,
     },
     {
       id: "scf-seek-bwd",
@@ -60,6 +68,7 @@ function onPlayerReady(): void {
 
 function onPipSupported(): void {
   pipSupported.value = true;
+  renderAll();
 }
 
 function registerListeners(): void {

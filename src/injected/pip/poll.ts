@@ -86,13 +86,13 @@ export function createPipPoller(): PipPoller {
       if (pollTimer) return;
       poll();
       pollTimer = setInterval(poll, POLL_INTERVAL_MS);
-      log.info("PiP polling started");
+      log.debug("PiP polling started");
     },
     stop() {
       if (pollTimer) {
         clearInterval(pollTimer);
         pollTimer = null;
-        log.info("PiP polling stopped");
+        log.debug("PiP polling stopped");
       }
     },
   };

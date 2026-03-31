@@ -144,6 +144,14 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
           <li>
             <strong>Seconds to seek</strong> — how far each seek button jumps (1–300 seconds)
           </li>
+          <li>
+            <strong>Auto-open PiP on tab switch</strong> — open the mini player automatically when
+            you leave the SoundCloud tab
+          </li>
+          <li>
+            <strong>Show PiP button in player</strong> — show or hide the PiP toggle button in the
+            player bar
+          </li>
         </ul>
         <p>
           Click <strong>Apply</strong> to save, <strong>Reset</strong> to restore defaults, or{" "}
@@ -154,11 +162,20 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
       <h2>Picture-in-Picture</h2>
 
       <section class="scf-modal-section">
-        <h3>Auto PiP</h3>
+        <h3>PiP Player</h3>
         <p>
-          When you switch away from the SoundCloud tab while music is playing, a mini player window
-          appears on top of all other windows.
+          An always-on-top mini player that floats above all other windows. Two ways to open it:
         </p>
+        <ul>
+          <li>
+            <strong>Auto mode</strong> — opens automatically when you switch away from the
+            SoundCloud tab (enabled by default, toggle in settings)
+          </li>
+          <li>
+            <strong>Manual button</strong> — click the PiP button in the player bar to open or close
+            it at any time (enabled by default, toggle in settings)
+          </li>
+        </ul>
         <p>The PiP window includes:</p>
         <ul>
           <li>
@@ -183,7 +200,10 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
             <strong>Time display</strong> — current position and total duration
           </li>
         </ul>
-        <p>The PiP window closes automatically when you return to the SoundCloud tab.</p>
+        <p>
+          In auto mode, the browser manages the PiP lifecycle — it opens when you leave the tab and
+          closes when you return. Manual PiP stays open until you close it yourself.
+        </p>
       </section>
 
       <section class="scf-modal-section">
@@ -198,8 +218,8 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
           </li>
         </ul>
         <p>
-          Toggle auto-PiP on or off in the <strong>Playback Settings</strong> dialog (gear icon). If
-          your browser doesn't support Document PiP, the toggle will be disabled.
+          Configure PiP in the <strong>Playback Settings</strong> dialog (gear icon). All PiP
+          toggles are disabled if your browser doesn't support Document PiP.
         </p>
       </section>
     </Modal>

@@ -27,7 +27,7 @@ async function openPipWindow(): Promise<void> {
     controller = null;
   });
 
-  log.info("PiP window opened");
+  log.debug("PiP window opened");
 }
 
 function closePipWindow(): void {
@@ -36,9 +36,11 @@ function closePipWindow(): void {
   documentPictureInPicture.window?.close();
 }
 
-function onVisibilityChange(): void {
-  if (document.visibilityState === "visible") {
+export function togglePip(): void {
+  if (documentPictureInPicture.window) {
     closePipWindow();
+  } else {
+    openPipWindow();
   }
 }
 
@@ -53,8 +55,7 @@ export function setupAutoPip(enabled: boolean): void {
       navigator.mediaSession.setActionHandler("enterpictureinpicture", () => {
         openPipWindow();
       });
-      document.addEventListener("visibilitychange", onVisibilityChange);
-      log.info("Auto PiP enabled");
+      log.debug("Auto PiP enabled");
     } catch {
       log.warn("Browser does not support enterpictureinpicture media session action");
     }
@@ -64,7 +65,6 @@ export function setupAutoPip(enabled: boolean): void {
     } catch {
       // ignore — action may not be supported
     }
-    document.removeEventListener("visibilitychange", onVisibilityChange);
-    log.info("Auto PiP disabled");
+    log.debug("Auto PiP disabled");
   }
 }

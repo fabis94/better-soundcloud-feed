@@ -32,7 +32,8 @@ export type PlayerCommand =
   | SeekBackwardCommand
   | TogglePlayCommand
   | SkipNextCommand
-  | SkipPrevCommand;
+  | SkipPrevCommand
+  | TogglePipCommand;
 
 export interface SeekForwardCommand {
   action: "seekForward";
@@ -52,6 +53,10 @@ export interface SkipNextCommand {
 
 export interface SkipPrevCommand {
   action: "skipPrev";
+}
+
+export interface TogglePipCommand {
+  action: "togglePip";
 }
 
 export interface PipSupportedMessage {

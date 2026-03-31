@@ -382,7 +382,8 @@ div.stream__filter {
 /* Player bar controls */
 .scf-seek-forward,
 .scf-seek-backward,
-.scf-settings-btn {
+.scf-settings-btn,
+.scf-pip-btn {
   color: var(--primary-color);
 }
 
@@ -392,14 +393,16 @@ div.stream__filter {
   height: 24px;
 }
 
-.scf-settings-btn svg {
+.scf-settings-btn svg,
+.scf-pip-btn svg {
   width: 16px;
   height: 16px;
 }
 
-.scf-settings-btn {
+.scf-settings-btn,
+.scf-pip-btn {
   padding: 0;
-  margin: 0 12px;
+  margin: 0 6px;
   cursor: pointer;
   color: var(--primary-color);
   display: flex;

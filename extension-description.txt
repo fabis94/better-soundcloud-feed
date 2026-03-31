@@ -22,6 +22,7 @@ Changes only take effect when you click Apply or Apply & Reload, so you can twea
 PLAYER CONTROLS
 
 • Seek forward / backward — two buttons in the player bar that jump forward or backward by a configurable number of seconds (default 30). If you're near the end of a track, seeking forward skips to the next track; near the start, seeking backward goes to the previous track. Toggle them on/off and customize the seek duration in extension settings.
+• PiP toggle — a button in the player bar to manually open or close the Picture-in-Picture window at any time. Can be hidden in extension settings.
 • Settings — a gear icon in the player bar that opens the extension settings dialog.
 
 PICTURE-IN-PICTURE
@@ -34,7 +35,7 @@ Switch to another tab and a mini player pops up on top of everything — no need
 • Like/unlike button (synced with SoundCloud)
 • Time display (current position and total duration)
 
-The PiP window closes automatically when you switch back. Enabled by default in extension settings. Works in Chrome and Edge; Firefox requires enabling an experimental flag.
+Configure PiP in extension settings: auto-open on tab switch (on by default, browser manages lifecycle) and a manual PiP button in the player bar (on by default, stays open until you close it). Works in Chrome and Edge; Firefox requires enabling an experimental flag.
 
 A built-in help button (?) explains all features and search syntax right inside the extension.
 

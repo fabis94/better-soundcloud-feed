@@ -1,5 +1,6 @@
 import type { PlayerCommand } from "../../shared/types";
 import { seekOrSkip } from "./seek";
+import { togglePip } from "../pip/index";
 
 /** Dispatch a player command to SC's internal player API. */
 export function handlePlayerCommand(cmd: PlayerCommand): void {
@@ -18,6 +19,9 @@ export function handlePlayerCommand(cmd: PlayerCommand): void {
       break;
     case "skipPrev":
       window.scPlayer?.playPrev?.();
+      break;
+    case "togglePip":
+      togglePip();
       break;
   }
 }

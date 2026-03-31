@@ -5,8 +5,13 @@ vi.mock("./seek", () => ({
   seekOrSkip: vi.fn(),
 }));
 
+vi.mock("../pip/index", () => ({
+  togglePip: vi.fn(),
+}));
+
 import { handlePlayerCommand } from "./commands";
 import { seekOrSkip } from "./seek";
+import { togglePip } from "../pip/index";
 
 describe("handlePlayerCommand", () => {
   beforeEach(() => {
@@ -44,6 +49,11 @@ describe("handlePlayerCommand", () => {
     expect(window.scPlayer?.playPrev).toHaveBeenCalledOnce();
   });
 
+  it("calls togglePip for togglePip command", () => {
+    handlePlayerCommand({ action: "togglePip" });
+    expect(togglePip).toHaveBeenCalledOnce();
+  });
+
   it("does not throw when scPlayer is undefined", () => {
     window.scPlayer = undefined as never;
     expect(() => handlePlayerCommand({ action: "togglePlay" })).not.toThrow();
@@ -51,5 +61,6 @@ describe("handlePlayerCommand", () => {
     expect(() => handlePlayerCommand({ action: "skipPrev" })).not.toThrow();
     expect(() => handlePlayerCommand({ action: "seekForward" })).not.toThrow();
     expect(() => handlePlayerCommand({ action: "seekBackward" })).not.toThrow();
+    expect(() => handlePlayerCommand({ action: "togglePip" })).not.toThrow();
   });
 });

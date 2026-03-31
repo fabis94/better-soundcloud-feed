@@ -22,10 +22,22 @@ vi.mock("../../shared/stores/settings-store", () => ({
   },
 }));
 
+// Mock pipSupported signal
+vi.mock("../signals", () => ({
+  pipSupported: { value: true },
+}));
+
 import { openSettingsModal } from "./SettingsModal";
 
-function openModal() {
-  mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 30 });
+const fullSettings = {
+  seekEnabled: false,
+  seekSeconds: 30,
+  pipAutoEnabled: true,
+  pipButtonEnabled: true,
+};
+
+function openModal(overrides: Record<string, unknown> = {}) {
+  mockGet.mockReturnValue({ ...fullSettings, ...overrides });
   openSettingsModal();
   return document.getElementById("scf-settings-modal")!;
 }
@@ -55,19 +67,27 @@ describe("SettingsModal", () => {
 
 describe("settings modal initial state", () => {
   it("reads current seekEnabled state", () => {
-    mockGet.mockReturnValue({ seekEnabled: true, seekSeconds: 30 });
-    openSettingsModal();
-    const modal = document.getElementById("scf-settings-modal")!;
+    const modal = openModal({ seekEnabled: true });
     const toggle = modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!;
     expect(toggle.checked).toBe(true);
   });
 
   it("reads current seekSeconds value", () => {
-    mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 45 });
-    openSettingsModal();
-    const modal = document.getElementById("scf-settings-modal")!;
+    const modal = openModal({ seekSeconds: 45 });
     const input = modal.querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!;
     expect(input.value).toBe("45");
+  });
+
+  it("reads current pipAutoEnabled state", () => {
+    const modal = openModal({ pipAutoEnabled: false });
+    const toggle = modal.querySelector<HTMLInputElement>("#scf-setting-pip-auto")!;
+    expect(toggle.checked).toBe(false);
+  });
+
+  it("reads current pipButtonEnabled state", () => {
+    const modal = openModal({ pipButtonEnabled: false });
+    const toggle = modal.querySelector<HTMLInputElement>("#scf-setting-pip-button")!;
+    expect(toggle.checked).toBe(false);
   });
 });
 
@@ -87,11 +107,35 @@ describe("Apply button", () => {
 
     modal.querySelector<HTMLElement>("#scf-settings-apply")!.click();
 
-    expect(mockUpdate).toHaveBeenCalledWith({
-      seekEnabled: true,
-      seekSeconds: 15,
-    });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        seekEnabled: true,
+        seekSeconds: 15,
+      }),
+    );
     expect(document.getElementById("scf-settings-modal")).toBeNull();
+  });
+
+  it("includes PiP settings in update", () => {
+    const modal = openModal({ pipAutoEnabled: true, pipButtonEnabled: true });
+
+    modal.querySelector<HTMLInputElement>("#scf-setting-pip-auto")!.checked = false;
+    modal
+      .querySelector<HTMLInputElement>("#scf-setting-pip-auto")!
+      .dispatchEvent(new Event("change", { bubbles: true }));
+    modal.querySelector<HTMLInputElement>("#scf-setting-pip-button")!.checked = false;
+    modal
+      .querySelector<HTMLInputElement>("#scf-setting-pip-button")!
+      .dispatchEvent(new Event("change", { bubbles: true }));
+
+    modal.querySelector<HTMLElement>("#scf-settings-apply")!.click();
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pipAutoEnabled: false,
+        pipButtonEnabled: false,
+      }),
+    );
   });
 
   it("falls back to stored seconds for invalid values", () => {
@@ -114,9 +158,12 @@ describe("Apply button", () => {
 
 describe("Reset button", () => {
   it("restores defaults in UI without saving", async () => {
-    mockGet.mockReturnValue({ seekEnabled: false, seekSeconds: 90 });
-    openSettingsModal();
-    const modal = document.getElementById("scf-settings-modal")!;
+    const modal = openModal({
+      seekEnabled: false,
+      seekSeconds: 90,
+      pipAutoEnabled: false,
+      pipButtonEnabled: false,
+    });
 
     modal.querySelector<HTMLElement>("#scf-settings-reset")!.click();
     // Signal updates trigger async Preact re-render
@@ -124,6 +171,8 @@ describe("Reset button", () => {
 
     expect(modal.querySelector<HTMLInputElement>("#scf-setting-seek-enabled")!.checked).toBe(true);
     expect(modal.querySelector<HTMLInputElement>("#scf-setting-seek-seconds")!.value).toBe("30");
+    expect(modal.querySelector<HTMLInputElement>("#scf-setting-pip-auto")!.checked).toBe(true);
+    expect(modal.querySelector<HTMLInputElement>("#scf-setting-pip-button")!.checked).toBe(true);
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

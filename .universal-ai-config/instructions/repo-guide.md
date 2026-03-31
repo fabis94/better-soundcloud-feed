@@ -38,7 +38,7 @@ Key details:
 The extension supports Document Picture-in-Picture (`documentPictureInPicture.requestWindow()`) for an always-on-top player window when switching tabs. Chromium 116+, Firefox 148+ (behind `dom.documentpip.enabled`).
 
 Architecture:
-- **PiP lifecycle** (`src/injected/pip/index.ts`) — opens/closes the PiP window, registers `enterpictureinpicture` media session handler for auto-PiP on tab switch, closes PiP when tab regains focus.
+- **PiP lifecycle** (`src/injected/pip/index.ts`) — opens/closes the PiP window, registers `enterpictureinpicture` media session handler for auto-PiP on tab switch. Exports `togglePip()` (open/close toggle used by the manual button) and `setupAutoPip(enabled)`. Auto-PiP lifecycle (open on tab leave, close on tab return) is managed by the browser; manual PiP stays open until the user closes it.
 - **PiP UI** (`src/injected/pip/ui.tsx`) — Preact components rendered into the PiP document. Includes track header (title link + like button), artwork, waveform canvas, transport controls, branding.
 - **Polling** (`src/injected/pip/poll.ts`) — 250ms interval updates Preact signals from `window.scPlayer` state. Module-level signals are reset via `resetSignals()` on each PiP session to avoid stale state.
 - **Waveform** (`src/injected/pip/waveform.ts`) — fetches SC waveform JSON (`wave.sndcdn.com/*.json`, 1800 samples), renders as canvas bars with progress overlay.
@@ -138,6 +138,7 @@ src/
       HelpModal.tsx        # In-app help content
       SettingsModal.tsx    # Playback + PiP settings form
       SettingsButton.tsx   # Gear icon for player bar
+      PipButton.tsx        # PiP toggle button for player bar
       FilterBar.tsx        # Feed filter UI (largest component)
       SeekButton.tsx       # Player seek forward/backward button
     player-controls/       # Player bar injection orchestration

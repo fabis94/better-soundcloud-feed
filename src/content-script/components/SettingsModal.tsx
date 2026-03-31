@@ -11,6 +11,7 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
   const seekEnabled = useSignal(settings.seekEnabled);
   const seekSeconds = useSignal(settings.seekSeconds);
   const pipAutoEnabled = useSignal(settings.pipAutoEnabled);
+  const pipButtonEnabled = useSignal(settings.pipButtonEnabled);
   const isPipSupported = pipSupported.value;
 
   const onApply = () => {
@@ -19,6 +20,7 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
       seekEnabled: seekEnabled.value,
       seekSeconds: seconds,
       pipAutoEnabled: pipAutoEnabled.value,
+      pipButtonEnabled: pipButtonEnabled.value,
     });
     onClose();
   };
@@ -27,6 +29,7 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
     seekEnabled.value = DEFAULT_SETTINGS.seekEnabled;
     seekSeconds.value = DEFAULT_SETTINGS.seekSeconds;
     pipAutoEnabled.value = DEFAULT_SETTINGS.pipAutoEnabled;
+    pipButtonEnabled.value = DEFAULT_SETTINGS.pipButtonEnabled;
   };
 
   return (
@@ -77,6 +80,17 @@ function SettingsModalContent({ onClose }: { onClose: () => void }) {
             checked={pipAutoEnabled.value}
             disabled={!isPipSupported}
             onChange={(e) => (pipAutoEnabled.value = (e.target as HTMLInputElement).checked)}
+          />
+        </label>
+        <label class={`scf-toggle-row${!isPipSupported ? " scf-toggle-row-disabled" : ""}`}>
+          <span>Show PiP button in player</span>
+          <input
+            type="checkbox"
+            class="scf-toggle"
+            id="scf-setting-pip-button"
+            checked={pipButtonEnabled.value}
+            disabled={!isPipSupported}
+            onChange={(e) => (pipButtonEnabled.value = (e.target as HTMLInputElement).checked)}
           />
         </label>
       </section>
