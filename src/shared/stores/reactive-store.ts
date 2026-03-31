@@ -1,5 +1,5 @@
-import { createLogger } from "./logger";
-import { BridgeMessageType } from "./types";
+import { createLogger } from "../utils/logger";
+import { BridgeMessageType } from "../types";
 
 const log = createLogger("store");
 

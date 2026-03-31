@@ -1,4 +1,4 @@
-import type { SCStreamItem, SCStreamResponse, FilterState } from "./types";
+import type { SCStreamItem, SCStreamResponse, FilterState } from "../types";
 import {
   parseSearchString,
   matchesSearch,

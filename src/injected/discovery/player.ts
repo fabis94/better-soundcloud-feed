@@ -1,5 +1,5 @@
-import type { SCPlayer } from "../shared/types";
-import { BridgeMessageType } from "../shared/types";
+import type { SCPlayer } from "../../shared/types";
+import { BridgeMessageType } from "../../shared/types";
 import { discover } from "./webpack";
 
 /**

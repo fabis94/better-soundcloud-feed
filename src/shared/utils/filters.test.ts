@@ -7,7 +7,7 @@ import {
   buildUser,
   buildFilters,
   buildStreamResponse,
-} from "../test/factories";
+} from "../../test/factories";
 
 describe("matchesFilters", () => {
   describe("simple search", () => {

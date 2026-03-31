@@ -1,8 +1,8 @@
 import { useSignal } from "@preact/signals";
 import type { FilterState, SCActivityType } from "../../shared/types";
 import { SCActivityType as ActivityTypes } from "../../shared/types";
-import { DEFAULT_FILTERS } from "../../shared/storage";
-import { formatActivityType } from "../filter-bar";
+import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
+import { formatActivityType } from "../feed/filter-bar";
 
 interface FilterBarProps {
   initialFilters: FilterState;

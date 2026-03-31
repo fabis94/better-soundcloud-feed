@@ -15,9 +15,9 @@ const localStorageMock = {
 };
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, writable: true });
 
-import { filterStore } from "./storage";
-import { buildFilters } from "../test/factories";
-import { SCActivityType } from "./types";
+import { filterStore } from "./filter-store";
+import { buildFilters } from "../../test/factories";
+import { SCActivityType } from "../types";
 
 beforeEach(() => {
   localStorageMock.clear();

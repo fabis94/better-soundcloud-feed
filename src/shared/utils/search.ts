@@ -1,4 +1,4 @@
-import type { SCStreamItem } from "./types";
+import type { SCStreamItem } from "../types";
 
 export interface ParsedSearch {
   includes: RegExp[];

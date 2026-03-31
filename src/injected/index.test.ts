@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
 import { BridgeMessageType } from "../shared/types";
 
 // Mock logger
-vi.mock("../shared/logger", () => ({
+vi.mock("../shared/utils/logger", () => ({
   createLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock("../shared/logger", () => ({
 }));
 
 // Mock storage
-vi.mock("../shared/storage", () => ({
+vi.mock("../shared/stores/filter-store", () => ({
   filterStore: {
     get: () => ({
       activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
@@ -32,7 +32,7 @@ vi.mock("../shared/storage", () => ({
 }));
 
 // Mock settings store
-vi.mock("../shared/settings-store", () => ({
+vi.mock("../shared/stores/settings-store", () => ({
   settingsStore: {
     get: (key?: string) => {
       if (key === "seekSeconds") return 30;
@@ -46,7 +46,7 @@ vi.mock("../shared/settings-store", () => ({
 }));
 
 // Mock player discovery (never resolves to avoid side effects)
-vi.mock("./player", () => ({
+vi.mock("./discovery/player", () => ({
   discoverPlayer: () => new Promise(() => {}),
 }));
 

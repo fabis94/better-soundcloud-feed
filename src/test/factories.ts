@@ -6,7 +6,7 @@ import type {
   SCStreamResponse,
   FilterState,
 } from "../shared/types";
-import { DEFAULT_FILTERS } from "../shared/storage";
+import { DEFAULT_FILTERS } from "../shared/stores/filter-store";
 
 let _id = 0;
 const nextId = (): number => ++_id;

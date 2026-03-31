@@ -9,7 +9,7 @@ import {
   getArtistText,
   getLabelText,
 } from "./search";
-import { buildStreamItem, buildTrack, buildUser } from "../test/factories";
+import { buildStreamItem, buildTrack, buildUser } from "../../test/factories";
 
 describe("parseSearchString", () => {
   it("returns empty arrays for empty string", () => {

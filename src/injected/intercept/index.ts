@@ -1,6 +1,6 @@
-import type { SCStreamResponse, FilterState } from "../shared/types";
-import { filterStreamResponse } from "../shared/filters";
-import { isStreamUrl, extractUrl, withActivityTypes } from "../shared/url";
+import type { SCStreamResponse, FilterState } from "../../shared/types";
+import { filterStreamResponse } from "../../shared/utils/filters";
+import { isStreamUrl, extractUrl, withActivityTypes } from "../../shared/utils/url";
 
 interface Logger {
   debug: (msg: string, props?: Record<string, unknown>) => void;

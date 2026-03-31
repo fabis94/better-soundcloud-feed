@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "@voidzero-dev/vite-plus-test";
 
 // Mock logger before any imports that use it
-vi.mock("../shared/logger", () => ({
+vi.mock("../shared/utils/logger", () => ({
   createLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),
@@ -27,7 +27,7 @@ const defaultFilters = {
   maxDurationSeconds: null,
 };
 
-vi.mock("../shared/storage", () => ({
+vi.mock("../shared/stores/filter-store", () => ({
   DEFAULT_FILTERS: defaultFilters,
   filterStore: {
     update: (...args: unknown[]) => mockUpdate(...args),

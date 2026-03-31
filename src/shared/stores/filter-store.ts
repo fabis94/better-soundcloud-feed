@@ -1,6 +1,6 @@
-import type { FilterState } from "./types";
-import { SCActivityType } from "./types";
-import { ReactiveStore } from "./store";
+import type { FilterState } from "../types";
+import { SCActivityType } from "../types";
+import { ReactiveStore } from "./reactive-store";
 
 export const DEFAULT_FILTERS: FilterState = {
   activityTypes: Object.values(SCActivityType),

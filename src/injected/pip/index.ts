@@ -1,4 +1,4 @@
-import { createLogger } from "../../shared/logger";
+import { createLogger } from "../../shared/utils/logger";
 import { buildPipDocument, type PipController } from "./ui";
 
 const log = createLogger("pip");

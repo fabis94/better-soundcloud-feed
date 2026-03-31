@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach, type Mock } from "@voidzero-dev/vite-plus-test";
 import { render } from "preact";
 import { SCActivityType } from "../../shared/types";
-import { DEFAULT_FILTERS } from "../../shared/storage";
+import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
 import { FilterBar } from "./FilterBar";
 
 let container: HTMLDivElement;

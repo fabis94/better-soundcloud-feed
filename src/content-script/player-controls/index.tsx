@@ -1,6 +1,6 @@
 import { render, type VNode } from "preact";
 import { BridgeMessageType, type BridgeMessage } from "../../shared/types";
-import { settingsStore } from "../../shared/settings-store";
+import { settingsStore } from "../../shared/stores/settings-store";
 import { playerReady, pipSupported } from "../signals";
 import { SeekButton } from "../components/SeekButton";
 import { SettingsButton } from "../components/SettingsButton";

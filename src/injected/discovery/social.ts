@@ -1,4 +1,4 @@
-import type { SCSocialActions } from "../shared/types";
+import type { SCSocialActions } from "../../shared/types";
 import { discover } from "./webpack";
 
 /**

@@ -6,7 +6,7 @@ interface WebpackRequire {
   c: Record<string, WebpackModule>;
 }
 
-import type { BridgeMessageTypeValue } from "../shared/types/bridge";
+import type { BridgeMessageTypeValue } from "../../shared/types/bridge";
 
 export type ModulePredicate = (exports: Record<string, unknown>) => boolean;
 

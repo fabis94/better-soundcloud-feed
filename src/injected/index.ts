@@ -1,34 +1,14 @@
-import { BridgeMessageType, type BridgeMessage, type PlayerCommand } from "../shared/types";
-import { filterStore } from "../shared/storage";
-import { settingsStore } from "../shared/settings-store";
-import { createLogger } from "../shared/logger";
+import { BridgeMessageType, type BridgeMessage } from "../shared/types";
+import { filterStore } from "../shared/stores/filter-store";
+import { settingsStore } from "../shared/stores/settings-store";
+import { createLogger } from "../shared/utils/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
-import { discoverPlayer } from "./player";
-import { discoverSocialActions } from "./social";
-import { seekOrSkip } from "./seek";
+import { discoverPlayer } from "./discovery/player";
+import { discoverSocialActions } from "./discovery/social";
+import { handlePlayerCommand } from "./player/commands";
 import { setupAutoPip } from "./pip/index";
 
 const log = createLogger("injected");
-
-function handlePlayerCommand(cmd: PlayerCommand): void {
-  switch (cmd.action) {
-    case "seekForward":
-      seekOrSkip(1);
-      break;
-    case "seekBackward":
-      seekOrSkip(-1);
-      break;
-    case "togglePlay":
-      window.scPlayer?.toggleCurrent?.();
-      break;
-    case "skipNext":
-      window.scPlayer?.playNext?.();
-      break;
-    case "skipPrev":
-      window.scPlayer?.playPrev?.();
-      break;
-  }
-}
 
 (function () {
   log.debug("Initial filters loaded from localStorage", {

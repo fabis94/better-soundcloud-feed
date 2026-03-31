@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "@voidzero-dev/vite-plus-test";
-import type { FilterState } from "../shared/types";
-import { DEFAULT_FILTERS } from "../shared/storage";
-import { buildStreamResponse, buildStreamItem, buildTrack } from "../test/factories";
-import { createFetchInterceptor, patchXHR } from "./intercept";
+import type { FilterState } from "../../shared/types";
+import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
+import { buildStreamResponse, buildStreamItem, buildTrack } from "../../test/factories";
+import { createFetchInterceptor, patchXHR } from ".";
 
 const noopLog = { debug: vi.fn() };
 

@@ -1,4 +1,4 @@
-import type { SCActivityType } from "./types";
+import type { SCActivityType } from "../types";
 
 const STREAM_RE = /api-v2\.soundcloud\.com\/(stream|feed)/;
 

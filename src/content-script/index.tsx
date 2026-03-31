@@ -1,10 +1,10 @@
 import { render } from "preact";
-import { filterStore } from "../shared/storage";
-import { createLogger } from "../shared/logger";
+import { filterStore } from "../shared/stores/filter-store";
+import { createLogger } from "../shared/utils/logger";
 import type { FilterState } from "../shared/types";
 import { openHelpModal } from "./components/HelpModal";
 import { FilterBar } from "./components/FilterBar";
-import { isFeedPage, FILTER_BAR_ID } from "./filter-bar";
+import { isFeedPage, FILTER_BAR_ID } from "./feed/filter-bar";
 import { injectPlayerControls } from "./player-controls";
 
 const log = createLogger("content-script");

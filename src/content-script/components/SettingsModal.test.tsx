@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "@voidzero-dev/vite-plus-test";
 
-vi.mock("../../shared/logger", () => ({
+vi.mock("../../shared/utils/logger", () => ({
   createLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock("../../shared/logger", () => ({
 
 const mockGet = vi.fn((_key?: string): unknown => false);
 const mockUpdate = vi.fn();
-vi.mock("../../shared/settings-store", () => ({
+vi.mock("../../shared/stores/settings-store", () => ({
   settingsStore: {
     get: (key?: string) => mockGet(key),
     update: (patch: Record<string, unknown>) => mockUpdate(patch),

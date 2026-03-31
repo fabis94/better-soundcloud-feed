@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "@voidzero-dev/vite-plus-test";
-import { BridgeMessageType } from "./types";
+import { BridgeMessageType } from "../types";
 
 const store: Record<string, string> = {};
 const localStorageMock = {
@@ -17,7 +17,7 @@ const localStorageMock = {
 };
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, writable: true });
 
-import { ReactiveStore } from "./store";
+import { ReactiveStore } from "./reactive-store";
 
 interface TestState {
   name: string;

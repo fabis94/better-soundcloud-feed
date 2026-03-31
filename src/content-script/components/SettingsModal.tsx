@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals";
 import { Modal, mountModal } from "./Modal";
-import { settingsStore } from "../../shared/settings-store";
+import { settingsStore } from "../../shared/stores/settings-store";
 import { DEFAULT_SETTINGS } from "../../shared/types";
 import { pipSupported } from "../signals";
 
