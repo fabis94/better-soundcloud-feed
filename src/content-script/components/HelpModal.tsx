@@ -150,6 +150,58 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
           <strong>Cancel</strong> to discard changes.
         </p>
       </section>
+
+      <h2>Picture-in-Picture</h2>
+
+      <section class="scf-modal-section">
+        <h3>Auto PiP</h3>
+        <p>
+          When you switch away from the SoundCloud tab while music is playing, a mini player window
+          appears on top of all other windows.
+        </p>
+        <p>The PiP window includes:</p>
+        <ul>
+          <li>
+            <strong>Track title</strong> — click to open the track page in a new tab
+          </li>
+          <li>
+            <strong>Artist name</strong> — click to open the artist's profile
+          </li>
+          <li>
+            <strong>Like button</strong> — heart icon next to the title, synced with SoundCloud
+          </li>
+          <li>
+            <strong>Cover artwork</strong>
+          </li>
+          <li>
+            <strong>Waveform</strong> — click anywhere to seek to that position
+          </li>
+          <li>
+            <strong>Transport controls</strong> — seek backward/forward, skip prev/next, play/pause
+          </li>
+          <li>
+            <strong>Time display</strong> — current position and total duration
+          </li>
+        </ul>
+        <p>The PiP window closes automatically when you return to the SoundCloud tab.</p>
+      </section>
+
+      <section class="scf-modal-section">
+        <h3>Browser Support</h3>
+        <ul>
+          <li>
+            <strong>Chrome / Edge 116+</strong> — supported out of the box
+          </li>
+          <li>
+            <strong>Firefox 148+</strong> — requires enabling <code>dom.documentpip.enabled</code>{" "}
+            in <code>about:config</code>
+          </li>
+        </ul>
+        <p>
+          Toggle auto-PiP on or off in the <strong>Playback Settings</strong> dialog (gear icon). If
+          your browser doesn't support Document PiP, the toggle will be disabled.
+        </p>
+      </section>
     </Modal>
   );
 }

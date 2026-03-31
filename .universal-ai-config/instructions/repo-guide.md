@@ -12,29 +12,50 @@ Manifest V3 browser extension (Chrome/Edge/Firefox) that filters SoundCloud's `/
 Two entry points, each built as separate IIFE bundles via Vite Environments API:
 
 - **Content script** (`src/content-script/`) — runs in isolated world. UI components are Preact functional components (`.tsx`) with `@preact/signals` for reactivity in `src/content-script/components/`. Injects filter UI into the feed page DOM, injects player controls into SC's player bar, and injects `injected.js` into the page context via `<script>` tag.
-- **Injected script** (`src/injected/`) — runs in page context (main world). Monkey-patches `window.fetch` and `XMLHttpRequest` to intercept and filter SC API responses. Discovers SC's internal player API from webpack module cache and handles playback commands.
+- **Injected script** (`src/injected/`) — runs in page context (main world). Monkey-patches `window.fetch` and `XMLHttpRequest` to intercept and filter SC API responses. Discovers SC's internal player and social-actions APIs from webpack module cache, handles playback commands, and manages the Picture-in-Picture player window.
 
-Communication between the two: `window.postMessage` bridge with typed `BridgeMessage` union (`SC_FILTER_READY`, `SC_PLAYER_READY`, `SC_PLAYER_COMMAND`) and `ReactiveStore` cross-realm sync (`SC_STORE_SYNC`).
+Communication between the two: `window.postMessage` bridge with typed `BridgeMessage` union (constants in `BridgeMessageType`) and `ReactiveStore` cross-realm sync.
 
-Shared code lives in `src/shared/` — modular types (`types/`), reactive store, filter logic, search parsing, URL helpers, logging.
+Shared code lives in `src/shared/` — types (`types/`), stores (`stores/`), utilities (`utils/`).
 
-## SC Player API (`scPlayer`)
+## Webpack Module Discovery
 
-The injected script discovers SC's internal playback controller from the webpack module cache. It probes via `webpackJsonp.push` with a unique chunk ID per attempt, searching for the module exporting `playCurrent`. This is module-ID independent — works regardless of SC's chunk ordering or minification.
+The injected script discovers SC's internal APIs from the webpack module cache via a generic `discover()` utility (`src/injected/discovery/webpack.ts`). It probes via `webpackJsonp.push` with a unique chunk ID per attempt, searching for modules matching a predicate. Module-ID independent — works regardless of SC's chunk ordering or minification.
+
+Currently discovers:
+- **Player API** (`src/injected/discovery/player.ts`) — predicate: `playCurrent` export. Assigned to `window.scPlayer`.
+- **Social Actions** (`src/injected/discovery/social.ts`) — predicate: `like` + `repost` exports. Assigned to `window.scSocialActions`. Handles like/unlike via SC's internal API.
 
 Key details:
-- **Discovery is async** — the injected script runs before SC's webpack runtime loads. `discoverPlayer()` polls every 1s until the runtime and player module are available.
-- **Assigned to `window.scPlayer`** once found, typed as `SCPlayer` (deeply partial via `PartialDeep`).
-- **Content script cannot access `window.scPlayer` directly** (isolated world). It sends `SC_PLAYER_COMMAND` messages; the injected script executes them.
-- **Player readiness** is signalled via `SC_PLAYER_READY` message + `document.documentElement.dataset.scfPlayerReady` data attribute (fallback for race conditions).
+- **Discovery is async** — the injected script runs before SC's webpack runtime loads. `discover()` polls every 1s until the runtime and target module are available.
+- `discover()` optionally signals readiness via `dataset` attribute + `postMessage` (using `BridgeMessageType` constants).
+- **Content script cannot access `window.scPlayer` directly** (isolated world). It sends `BridgeMessageType.PlayerCommand` messages; the injected script executes them via `handlePlayerCommand()` in `src/injected/player/commands.ts`.
 - `seekCurrentTo` and `seekCurrentBy` take **callback functions** `(sound) => number`, not raw numbers.
+- Seek logic (`src/injected/player/seek.ts`) has a pure `resolveSeekAction()` for boundary detection (skip next at >90%, skip prev at <10%).
+
+## Picture-in-Picture (PiP)
+
+The extension supports Document Picture-in-Picture (`documentPictureInPicture.requestWindow()`) for an always-on-top player window when switching tabs. Chromium 116+, Firefox 148+ (behind `dom.documentpip.enabled`).
+
+Architecture:
+- **PiP lifecycle** (`src/injected/pip/index.ts`) — opens/closes the PiP window, registers `enterpictureinpicture` media session handler for auto-PiP on tab switch, closes PiP when tab regains focus.
+- **PiP UI** (`src/injected/pip/ui.tsx`) — Preact components rendered into the PiP document. Includes track header (title link + like button), artwork, waveform canvas, transport controls, branding.
+- **Polling** (`src/injected/pip/poll.ts`) — 250ms interval updates Preact signals from `window.scPlayer` state. Module-level signals are reset via `resetSignals()` on each PiP session to avoid stale state.
+- **Waveform** (`src/injected/pip/waveform.ts`) — fetches SC waveform JSON (`wave.sndcdn.com/*.json`, 1800 samples), renders as canvas bars with progress overlay.
+- **Styles** (`src/injected/pip/styles.ts`) — CSS injected into PiP document. Uses SC CSS variables (copied from main page via `copyThemeVariables()`) for dark/light theme support.
+
+The PiP window runs in the **page context** (same realm as the injected script), so it has direct access to `window.scPlayer` and `window.scSocialActions` — no bridge messages needed for PiP controls.
+
+The liked state is read from SC's player bar DOM (`document.querySelector(".playbackSoundBadge__like").classList.contains("sc-button-selected")`), cached per track change.
+
+Type declarations for the Document PiP API are in `src/document-pip.d.ts` (not yet in lib.dom.d.ts).
 
 ## Reactive Store (`ReactiveStore<T>`)
 
-`src/shared/store.ts` provides a generic, type-safe, reactive localStorage-backed store. All persistent state uses this:
+`src/shared/stores/reactive-store.ts` provides a generic, type-safe, reactive localStorage-backed store. All persistent state uses this:
 
-- `filterStore` (`src/shared/storage.ts`) — feed filter state, explicit-apply semantics
-- `settingsStore` (`src/shared/settings-store.ts`) — extension settings, instant-apply semantics
+- `filterStore` (`src/shared/stores/filter-store.ts`) — feed filter state, explicit-apply semantics
+- `settingsStore` (`src/shared/stores/settings-store.ts`) — extension settings, instant-apply semantics
 
 API: `get()`, `get(key)`, `update(patch)`, `subscribe(fn)`, `reload()`, `isAvailable()`. `subscribe()` returns an unsubscribe function. State is lazy-loaded on first access, merged with defaults.
 
@@ -47,11 +68,11 @@ export const myStore = new ReactiveStore<MyState>("bscf_mystate", MY_DEFAULTS);
 
 Both IIFE bundles (content script + injected script) create their own `ReactiveStore` instances. Since they run in separate JS realms but share the same `localStorage` and `window.postMessage` channel, the store self-syncs:
 
-- `update()` persists to localStorage, notifies local subscribers, then posts `SC_STORE_SYNC` with the store key via `window.postMessage`.
-- Each store listens for `SC_STORE_SYNC` messages matching its key. On receipt, it reloads from localStorage and notifies its own subscribers.
+- `update()` persists to localStorage, notifies local subscribers, then posts `BridgeMessageType.StoreSync` with the store key via `window.postMessage`.
+- Each store listens for `BridgeMessageType.StoreSync` messages matching its key. On receipt, it reloads from localStorage and notifies its own subscribers.
 - No manual message passing needed for persistent state — just call `update()` in one realm and `subscribe()` in the other.
 
-This is why `SC_FILTER_UPDATE` doesn't exist — filter sync is handled entirely by `filterStore`'s cross-realm reactivity. Use explicit `BridgeMessage` types only for transient actions (commands, readiness signals) that aren't persisted state.
+This is why no filter-update message exists — filter sync is handled entirely by `filterStore`'s cross-realm reactivity. Use explicit `BridgeMessage` types only for transient actions (commands, readiness signals) that aren't persisted state.
 
 ## Key Constraints
 
@@ -115,21 +136,47 @@ src/
     components/            # Preact functional components (.tsx)
       Modal.tsx            # Reusable modal (backdrop, dialog, close)
       HelpModal.tsx        # In-app help content
-      SettingsModal.tsx    # Playback settings form
+      SettingsModal.tsx    # Playback + PiP settings form
       SettingsButton.tsx   # Gear icon for player bar
       FilterBar.tsx        # Feed filter UI (largest component)
       SeekButton.tsx       # Player seek forward/backward button
     player-controls/       # Player bar injection orchestration
       icons/               # SVG icons (imported via ?raw)
-    filter-bar.ts          # Pure functions (formatActivityType, isFeedPage)
-    signals.ts             # Shared signals (playerReady)
-  injected/                # fetch/XHR monkey-patching, player discovery, command handling
+    feed/                  # Feed page utilities
+      filter-bar.ts        # formatActivityType, isFeedPage
+    signals.ts             # Shared signals (playerReady, pipSupported)
+  injected/
+    discovery/             # Webpack module discovery
+      webpack.ts           # Generic discover() utility
+      player.ts            # SC player API discovery
+      social.ts            # SC social actions discovery
+    intercept/             # API interception
+      index.ts             # fetch/XHR monkey-patching
+    pip/                   # Document Picture-in-Picture player
+      index.ts             # PiP lifecycle (open/close, auto-PiP)
+      ui.tsx               # Preact components for PiP window
+      poll.ts              # Signals + polling loop
+      waveform.ts          # Canvas rendering + waveform fetch
+      styles.ts            # CSS + theme variable copying
+      icons/               # PiP-specific SVG icons
+    player/                # Player command handling
+      commands.ts          # handlePlayerCommand dispatcher
+      seek.ts              # seekOrSkip + resolveSeekAction
+    index.ts               # Entry point (wiring)
   shared/
-    types/                 # Modular type definitions (sc-api, filters, bridge, player, settings)
-    store.ts               # ReactiveStore<T> — generic reactive localStorage store
-    storage.ts             # filterStore instance
-    settings-store.ts      # settingsStore instance
-  test/                    # test setup, factories
+    types/                 # Modular type definitions
+    stores/                # ReactiveStore class + instances
+      reactive-store.ts    # ReactiveStore<T> generic class
+      filter-store.ts      # filterStore instance + defaults
+      settings-store.ts    # settingsStore instance
+    utils/                 # Pure utilities
+      filters.ts           # Stream response filtering
+      search.ts            # Search term matching
+      url.ts               # URL helpers
+      format.ts            # formatTime, getArtworkUrl
+      logger.ts            # LogTape logger factory
+    constants.ts           # REPO_URL
+  test/                    # Test setup, factories
 ```
 
 Tests are colocated with the files they test (e.g., `filters.test.ts` next to `filters.ts`).
@@ -144,6 +191,8 @@ Tests are colocated with the files they test (e.g., `filters.test.ts` next to `f
 - SVG icons: import via `?raw` and render with `dangerouslySetInnerHTML={{ __html: svgString }}`.
 - Shared cross-component state (e.g. `playerReady`) lives in `src/content-script/signals.ts` as exported signals.
 - CSS classes use `scf-` prefix to avoid collisions with SC's own classes.
-- Bridge message types are a discriminated union (`BridgeMessage`) in `src/shared/types/bridge.ts`. Extend `PlayerCommand` union for new playback actions.
+- Bridge message types are a discriminated union (`BridgeMessage`) in `src/shared/types/bridge.ts`. All type strings live in `BridgeMessageType` const object — never use magic strings. Extend `PlayerCommand` union for new playback actions.
 - New persistent state → new `ReactiveStore` instance. One line, full reactivity.
+- New SC webpack module to discover → add a predicate in `src/injected/discovery/`, use `discover()` from `webpack.ts`.
+- PiP UI uses Preact with module-level `@preact/signals` for reactive state, updated by a 250ms polling loop. Canvas rendering (waveform) stays imperative via `useEffect`.
 - Test factories use `Partial<T>` overrides. `buildStreamResponse` uses `Record<string, unknown>` with an `as` cast to work around `PartialDeep` type complexity.

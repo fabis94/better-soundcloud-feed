@@ -67,6 +67,21 @@ Changes only take effect when the user clicks **Apply** or **Apply & Reload**.
 
 Seek buttons are enabled by default. Toggle and customize the seek duration in extension settings. Player controls appear greyed out until the player API is discovered, then become active.
 
+### Picture-in-Picture
+
+When you switch away from the SoundCloud tab, an always-on-top mini player appears with:
+
+- Track title (clickable — opens track page) and artist name (clickable — opens profile)
+- Cover artwork
+- Waveform progress bar (clickable to seek)
+- Full transport controls: seek backward/forward, skip prev/next, play/pause
+- Like/unlike button (synced with SoundCloud)
+- Current time and total duration
+
+The PiP window closes automatically when you return to the SoundCloud tab. Requires Chrome 116+ or Edge 116+. Firefox 148+ supports it with `dom.documentpip.enabled` enabled in `about:config`.
+
+Auto-PiP is enabled by default. Toggle in the extension settings dialog.
+
 ## License
 
 [MIT](LICENSE)
