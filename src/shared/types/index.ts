@@ -26,6 +26,9 @@ export type {
   PlayerCommand,
   SeekForwardCommand,
   SeekBackwardCommand,
+  TogglePlayCommand,
+  SkipNextCommand,
+  SkipPrevCommand,
   PipSupportedMessage,
 } from "./bridge";
 

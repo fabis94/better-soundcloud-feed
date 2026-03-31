@@ -1,8 +1,10 @@
-import { createLogger } from "../shared/logger";
+import { createLogger } from "../../shared/logger";
+import { buildPipDocument, type PipController } from "./ui";
 
 const log = createLogger("pip");
 
 let autoPipEnabled = false;
+let controller: PipController | null = null;
 
 async function openPipWindow(): Promise<void> {
   if (!("documentPictureInPicture" in window)) return;
@@ -13,16 +15,24 @@ async function openPipWindow(): Promise<void> {
   }
 
   const pipWindow = await documentPictureInPicture.requestWindow({
-    width: 400,
-    height: 200,
+    width: 360,
+    height: 480,
   });
 
-  pipWindow.document.body.innerHTML =
-    "<h1 style='font-family: sans-serif; text-align: center; margin-top: 60px;'>Hello World</h1>";
+  controller = buildPipDocument(pipWindow);
+  controller.startPolling();
+
+  pipWindow.addEventListener("pagehide", () => {
+    controller?.stopPolling();
+    controller = null;
+  });
+
   log.info("PiP window opened");
 }
 
 function closePipWindow(): void {
+  controller?.stopPolling();
+  controller = null;
   documentPictureInPicture.window?.close();
 }
 

@@ -16,7 +16,12 @@ export interface PlayerCommandMessage {
 }
 
 /** Discriminated union of player commands. Extend with new actions as needed. */
-export type PlayerCommand = SeekForwardCommand | SeekBackwardCommand;
+export type PlayerCommand =
+  | SeekForwardCommand
+  | SeekBackwardCommand
+  | TogglePlayCommand
+  | SkipNextCommand
+  | SkipPrevCommand;
 
 export interface SeekForwardCommand {
   action: "seekForward";
@@ -24,6 +29,18 @@ export interface SeekForwardCommand {
 
 export interface SeekBackwardCommand {
   action: "seekBackward";
+}
+
+export interface TogglePlayCommand {
+  action: "togglePlay";
+}
+
+export interface SkipNextCommand {
+  action: "skipNext";
+}
+
+export interface SkipPrevCommand {
+  action: "skipPrev";
 }
 
 export interface PipSupportedMessage {

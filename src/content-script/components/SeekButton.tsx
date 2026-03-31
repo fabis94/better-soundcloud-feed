@@ -1,17 +1,20 @@
-import type { PlayerCommand, PlayerCommandMessage } from "../../shared/types";
+import type {
+  PlayerCommandMessage,
+  SeekForwardCommand,
+  SeekBackwardCommand,
+} from "../../shared/types";
 import seekForwardIcon from "../player-controls/icons/seek-forward.svg?raw";
 import seekBackwardIcon from "../player-controls/icons/seek-backward.svg?raw";
 
-const SEEK_CONFIG: Record<
-  PlayerCommand["action"],
-  { icon: string; title: string; className: string }
-> = {
+type SeekAction = SeekForwardCommand["action"] | SeekBackwardCommand["action"];
+
+const SEEK_CONFIG: Record<SeekAction, { icon: string; title: string; className: string }> = {
   seekForward: { icon: seekForwardIcon, title: "Seek forward", className: "scf-seek-forward" },
   seekBackward: { icon: seekBackwardIcon, title: "Seek backward", className: "scf-seek-backward" },
 };
 
 interface SeekButtonProps {
-  direction: PlayerCommand["action"];
+  direction: SeekAction;
   visible: boolean;
   playerReady: boolean;
 }

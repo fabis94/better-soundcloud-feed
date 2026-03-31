@@ -4,7 +4,7 @@ import { settingsStore } from "../shared/settings-store";
 import { createLogger } from "../shared/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
 import { discoverPlayer } from "./player";
-import { setupAutoPip } from "./pip";
+import { setupAutoPip } from "./pip/index";
 
 const log = createLogger("injected");
 
@@ -30,6 +30,18 @@ function handlePlayerCommand(cmd: PlayerCommand): void {
       } else {
         window.scPlayer?.seekCurrentBy?.(() => -amount);
       }
+      break;
+    }
+    case "togglePlay": {
+      window.scPlayer?.toggleCurrent?.();
+      break;
+    }
+    case "skipNext": {
+      window.scPlayer?.playNext?.();
+      break;
+    }
+    case "skipPrev": {
+      window.scPlayer?.playPrev?.();
       break;
     }
   }
