@@ -18,6 +18,8 @@ export { SCActivityType } from "./filters";
 export type { SCStreamParams, FilterState } from "./filters";
 
 /** @knipignore bridge protocol — complete set */
+export { BridgeMessageType } from "./bridge";
+/** @knipignore */
 export type {
   BridgeMessage,
   FilterReadyMessage,
@@ -33,7 +35,13 @@ export type {
 } from "./bridge";
 
 /** @knipignore SC player API surface — complete set */
-export type { SCAudioPlayer, SCSoundModel, SCQueueState, SCPlayer } from "./player";
+export type {
+  SCAudioPlayer,
+  SCSoundModel,
+  SCQueueState,
+  SCPlayer,
+  SCSocialActions,
+} from "./player";
 
 export type { ExtensionSettings } from "./settings";
 export { DEFAULT_SETTINGS } from "./settings";

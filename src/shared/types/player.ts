@@ -139,8 +139,14 @@ export type SCPlayer = Deep<SCRawPlayer>;
 
 // --- Window augmentation ---
 
+export interface SCSocialActions {
+  like(entity: unknown, state?: boolean): Promise<{ state: boolean }>;
+  repost(entity: unknown, state?: boolean): Promise<{ state: boolean }>;
+}
+
 declare global {
   interface Window {
     scPlayer?: SCPlayer;
+    scSocialActions?: SCSocialActions;
   }
 }

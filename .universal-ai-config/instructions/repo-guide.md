@@ -99,6 +99,10 @@ Min/max in minutes (UI) → stored as seconds → compared against `track.durati
 ### Playlist filtering
 A playlist passes if the playlist metadata itself OR any individual track within it matches search + duration filters.
 
+## Public presence
+
+You can find the link to the repository in package.json
+
 ## Icons
 
 SVG icons are stored as `.svg` files and imported via `?raw` suffix (Vite inlines them as strings).

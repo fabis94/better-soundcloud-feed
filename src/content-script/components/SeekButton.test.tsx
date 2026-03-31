@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "@voidzero-dev/vite-plus-test";
 import { render } from "preact";
+import { BridgeMessageType } from "../../shared/types";
 import { SeekButton } from "./SeekButton";
 
 let container: HTMLDivElement;
@@ -34,7 +35,7 @@ describe("SeekButton forward", () => {
     render(<SeekButton direction="seekForward" visible={true} playerReady={true} />, container);
     container.querySelector("button")!.click();
     expect(spy).toHaveBeenCalledWith(
-      { type: "SC_PLAYER_COMMAND", payload: { action: "seekForward" } },
+      { type: BridgeMessageType.PlayerCommand, payload: { action: "seekForward" } },
       "*",
     );
     spy.mockRestore();
@@ -54,7 +55,7 @@ describe("SeekButton backward", () => {
     render(<SeekButton direction="seekBackward" visible={true} playerReady={true} />, container);
     container.querySelector("button")!.click();
     expect(spy).toHaveBeenCalledWith(
-      { type: "SC_PLAYER_COMMAND", payload: { action: "seekBackward" } },
+      { type: BridgeMessageType.PlayerCommand, payload: { action: "seekBackward" } },
       "*",
     );
     spy.mockRestore();

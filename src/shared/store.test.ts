@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "@voidzero-dev/vite-plus-test";
+import { BridgeMessageType } from "./types";
 
 const store: Record<string, string> = {};
 const localStorageMock = {
@@ -132,7 +133,10 @@ describe("ReactiveStore", () => {
     it("posts SC_STORE_SYNC message on update", () => {
       const spy = vi.spyOn(window, "postMessage");
       testStore.update({ name: "synced" });
-      expect(spy).toHaveBeenCalledWith({ type: "SC_STORE_SYNC", key: "test-store" }, "*");
+      expect(spy).toHaveBeenCalledWith(
+        { type: BridgeMessageType.StoreSync, key: "test-store" },
+        "*",
+      );
       spy.mockRestore();
     });
 
@@ -149,7 +153,7 @@ describe("ReactiveStore", () => {
       // Dispatch sync message as if from the other realm
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { type: "SC_STORE_SYNC", key: "test-store" },
+          data: { type: BridgeMessageType.StoreSync, key: "test-store" },
           source: window,
         }),
       );
@@ -164,7 +168,7 @@ describe("ReactiveStore", () => {
 
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { type: "SC_STORE_SYNC", key: "other-store" },
+          data: { type: BridgeMessageType.StoreSync, key: "other-store" },
           source: window,
         }),
       );
@@ -178,7 +182,7 @@ describe("ReactiveStore", () => {
 
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { type: "SC_PLAYER_READY" },
+          data: { type: BridgeMessageType.PlayerReady },
           source: window,
         }),
       );

@@ -1,7 +1,8 @@
-import type {
-  PlayerCommandMessage,
-  SeekForwardCommand,
-  SeekBackwardCommand,
+import {
+  BridgeMessageType,
+  type PlayerCommandMessage,
+  type SeekForwardCommand,
+  type SeekBackwardCommand,
 } from "../../shared/types";
 import seekForwardIcon from "../player-controls/icons/seek-forward.svg?raw";
 import seekBackwardIcon from "../player-controls/icons/seek-backward.svg?raw";
@@ -25,7 +26,7 @@ export function SeekButton({ direction, visible, playerReady }: SeekButtonProps)
 
   const onClick = () => {
     const msg: PlayerCommandMessage = {
-      type: "SC_PLAYER_COMMAND",
+      type: BridgeMessageType.PlayerCommand,
       payload: { action: direction },
     };
     window.postMessage(msg, "*");

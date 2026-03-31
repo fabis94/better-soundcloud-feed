@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
+import { BridgeMessageType } from "../shared/types";
 
 // Mock logger
 vi.mock("../shared/logger", () => ({
@@ -75,7 +76,7 @@ describe("injected module", () => {
 
   it("posts SC_FILTER_READY message on init", () => {
     const readyCall = postMessageCalls.find(
-      (args) => (args[0] as Record<string, unknown>)?.type === "SC_FILTER_READY",
+      (args) => (args[0] as Record<string, unknown>)?.type === BridgeMessageType.FilterReady,
     );
     expect(readyCall).toBeDefined();
     expect(readyCall![1]).toBe("*");
@@ -86,7 +87,7 @@ describe("injected module", () => {
       window.dispatchEvent(
         new MessageEvent("message", {
           data: {
-            type: "SC_PLAYER_COMMAND",
+            type: BridgeMessageType.PlayerCommand,
             payload: { action: "seekForward" },
           },
           source: window,

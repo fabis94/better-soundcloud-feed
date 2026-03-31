@@ -1,49 +1,32 @@
-import type { BridgeMessage, PlayerCommand } from "../shared/types";
+import { BridgeMessageType, type BridgeMessage, type PlayerCommand } from "../shared/types";
 import { filterStore } from "../shared/storage";
 import { settingsStore } from "../shared/settings-store";
 import { createLogger } from "../shared/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
 import { discoverPlayer } from "./player";
+import { discoverSocialActions } from "./social";
+import { seekOrSkip } from "./seek";
 import { setupAutoPip } from "./pip/index";
 
 const log = createLogger("injected");
 
 function handlePlayerCommand(cmd: PlayerCommand): void {
-  const sound = window.scPlayer?.getCurrentSound?.();
-  if (!sound) return;
-  const position = sound.player?.getPosition?.() ?? 0;
-  const duration = sound.player?.getDuration?.() ?? 0;
-  const amount = settingsStore.get("seekSeconds") * 1000;
-
   switch (cmd.action) {
-    case "seekForward": {
-      if (duration > 0 && position + amount > duration * 0.9) {
-        window.scPlayer?.playNext?.();
-      } else {
-        window.scPlayer?.seekCurrentBy?.(() => amount);
-      }
+    case "seekForward":
+      seekOrSkip(1);
       break;
-    }
-    case "seekBackward": {
-      if (duration > 0 && position - amount < duration * 0.1) {
-        window.scPlayer?.playPrev?.();
-      } else {
-        window.scPlayer?.seekCurrentBy?.(() => -amount);
-      }
+    case "seekBackward":
+      seekOrSkip(-1);
       break;
-    }
-    case "togglePlay": {
+    case "togglePlay":
       window.scPlayer?.toggleCurrent?.();
       break;
-    }
-    case "skipNext": {
+    case "skipNext":
       window.scPlayer?.playNext?.();
       break;
-    }
-    case "skipPrev": {
+    case "skipPrev":
       window.scPlayer?.playPrev?.();
       break;
-    }
   }
 }
 
@@ -60,7 +43,7 @@ function handlePlayerCommand(cmd: PlayerCommand): void {
   // Player commands still use explicit messages since they're transient
   // actions, not persisted state.
   window.addEventListener("message", (e: MessageEvent<BridgeMessage>) => {
-    if (e.source !== window || e.data?.type !== "SC_PLAYER_COMMAND") return;
+    if (e.source !== window || e.data?.type !== BridgeMessageType.PlayerCommand) return;
     if (window.scPlayer) handlePlayerCommand(e.data.payload);
   });
 
@@ -70,17 +53,22 @@ function handlePlayerCommand(cmd: PlayerCommand): void {
   patchXHR(getFilters, log);
 
   // Discover SC's internal player API (polls until webpack modules are loaded)
+  // Signalling (dataset + bridge message) is handled inside discoverPlayer().
   discoverPlayer().then((scPlayer) => {
     window.scPlayer = scPlayer;
     log.info("SC player API discovered and assigned to window.scPlayer");
-    document.documentElement.dataset["scfPlayerReady"] = "true";
-    window.postMessage({ type: "SC_PLAYER_READY" }, "*");
+  });
+
+  // Discover SC's social actions module (like/repost)
+  discoverSocialActions().then((socialActions) => {
+    window.scSocialActions = socialActions;
+    log.info("SC social actions discovered");
   });
 
   // Detect Document PiP support
   if ("documentPictureInPicture" in window) {
     document.documentElement.dataset["scfPipSupported"] = "true";
-    window.postMessage({ type: "SC_PIP_SUPPORTED" }, "*");
+    window.postMessage({ type: BridgeMessageType.PipSupported }, "*");
     log.info("Document Picture-in-Picture API is supported");
 
     setupAutoPip(settingsStore.get("pipAutoEnabled"));
@@ -90,5 +78,5 @@ function handlePlayerCommand(cmd: PlayerCommand): void {
   }
 
   // Signal readiness
-  window.postMessage({ type: "SC_FILTER_READY" }, "*");
+  window.postMessage({ type: BridgeMessageType.FilterReady }, "*");
 })();

@@ -2,16 +2,27 @@
 // Filter sync is handled by ReactiveStore's cross-realm postMessage,
 // so no FilterUpdateMessage needed here.
 
+/** Single source of truth for all bridge message type strings. */
+export type BridgeMessageTypeValue = (typeof BridgeMessageType)[keyof typeof BridgeMessageType];
+
+export const BridgeMessageType = {
+  FilterReady: "SC_FILTER_READY",
+  PlayerReady: "SC_PLAYER_READY",
+  PlayerCommand: "SC_PLAYER_COMMAND",
+  PipSupported: "SC_PIP_SUPPORTED",
+  StoreSync: "SC_STORE_SYNC",
+} as const;
+
 export interface FilterReadyMessage {
-  type: "SC_FILTER_READY";
+  type: typeof BridgeMessageType.FilterReady;
 }
 
 export interface PlayerReadyMessage {
-  type: "SC_PLAYER_READY";
+  type: typeof BridgeMessageType.PlayerReady;
 }
 
 export interface PlayerCommandMessage {
-  type: "SC_PLAYER_COMMAND";
+  type: typeof BridgeMessageType.PlayerCommand;
   payload: PlayerCommand;
 }
 
@@ -44,7 +55,7 @@ export interface SkipPrevCommand {
 }
 
 export interface PipSupportedMessage {
-  type: "SC_PIP_SUPPORTED";
+  type: typeof BridgeMessageType.PipSupported;
 }
 
 export type BridgeMessage =

@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fabis94/better-soundcloud-feed.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vp build --watch --mode development",

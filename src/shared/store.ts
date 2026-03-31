@@ -1,11 +1,10 @@
 import { createLogger } from "./logger";
+import { BridgeMessageType } from "./types";
 
 const log = createLogger("store");
 
-const SYNC_MESSAGE_TYPE = "SC_STORE_SYNC";
-
 interface StoreSyncMessage {
-  type: typeof SYNC_MESSAGE_TYPE;
+  type: typeof BridgeMessageType.StoreSync;
   key: string;
 }
 
@@ -95,7 +94,7 @@ export class ReactiveStore<T extends object> {
 
   private postSync(): void {
     try {
-      const msg: StoreSyncMessage = { type: SYNC_MESSAGE_TYPE, key: this.key };
+      const msg: StoreSyncMessage = { type: BridgeMessageType.StoreSync, key: this.key };
       window.postMessage(msg, "*");
     } catch {
       // postMessage unavailable (e.g. tests without jsdom) — sync is best-effort
@@ -105,7 +104,11 @@ export class ReactiveStore<T extends object> {
   private listenForSync(): void {
     try {
       window.addEventListener("message", (e: MessageEvent<StoreSyncMessage>) => {
-        if (e.source !== window || e.data?.type !== SYNC_MESSAGE_TYPE || e.data.key !== this.key) {
+        if (
+          e.source !== window ||
+          e.data?.type !== BridgeMessageType.StoreSync ||
+          e.data.key !== this.key
+        ) {
           return;
         }
         // Another realm updated this store — reload from localStorage and notify

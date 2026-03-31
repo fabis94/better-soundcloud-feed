@@ -1,5 +1,5 @@
 import { render, type VNode } from "preact";
-import type { BridgeMessage } from "../../shared/types";
+import { BridgeMessageType, type BridgeMessage } from "../../shared/types";
 import { settingsStore } from "../../shared/settings-store";
 import { playerReady, pipSupported } from "../signals";
 import { SeekButton } from "../components/SeekButton";
@@ -75,8 +75,8 @@ function registerListeners(): void {
 
   window.addEventListener("message", (e: MessageEvent<BridgeMessage>) => {
     if (e.source !== window) return;
-    if (e.data?.type === "SC_PLAYER_READY") onPlayerReady();
-    if (e.data?.type === "SC_PIP_SUPPORTED") onPipSupported();
+    if (e.data?.type === BridgeMessageType.PlayerReady) onPlayerReady();
+    if (e.data?.type === BridgeMessageType.PipSupported) onPipSupported();
   });
 
   settingsStore.subscribe(() => renderAll());
