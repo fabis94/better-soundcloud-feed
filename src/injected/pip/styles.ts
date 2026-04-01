@@ -75,17 +75,24 @@ export const PIP_STYLES = `
   .pip-btn-like.pip-liked { color: var(--special-color, #f50); }
   .pip-btn-like svg { width: 18px; height: 18px; }
 
-  .pip-artist {
+  .pip-artist-row {
     font-size: 12px;
     color: var(--secondary-color, #999);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 2px;
+    margin-bottom: 4px;
+  }
+
+  .pip-artist { cursor: pointer; }
+  .pip-artist:hover { text-decoration: underline; }
+
+  .pip-feed-context-link {
     cursor: pointer;
   }
 
-  .pip-artist:hover { text-decoration: underline; }
+  .pip-feed-context-link:hover { text-decoration: underline; }
 
   .pip-artwork-wrap {
     flex: 1;

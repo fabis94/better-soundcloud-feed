@@ -7,6 +7,24 @@ const log = createLogger("pip-poll");
 
 const POLL_INTERVAL_MS = 250;
 
+// --- Feed context types ---
+
+interface FeedContextPlaylist {
+  title: string;
+  url: string;
+  /** Display label: "single", "album", or "playlist". */
+  label: string;
+}
+
+interface FeedContext {
+  verb: "posted" | "reposted";
+  /** Only set for reposts (when poster differs from track artist). */
+  posterName?: string;
+  posterUrl?: string;
+  date: string;
+  playlist?: FeedContextPlaylist;
+}
+
 // --- Reactive state (signals) ---
 
 export const trackTitle = signal("—");
@@ -19,6 +37,7 @@ export const durationMs = signal(0);
 export const isPlaying = signal(false);
 export const isLiked = signal(false);
 export const waveformData = signal<WaveformData | null>(null);
+export const feedContext = signal<FeedContext | null>(null);
 
 /** Reset all signals to defaults (call when opening a new PiP session). */
 export function resetSignals(): void {
@@ -32,11 +51,46 @@ export function resetSignals(): void {
   isPlaying.value = false;
   isLiked.value = false;
   waveformData.value = null;
+  feedContext.value = null;
 }
 
 export interface PipPoller {
   start(): void;
   stop(): void;
+}
+
+function playlistLabel(setType: string | undefined | null): string {
+  if (setType === "single") return "single";
+  if (setType === "album") return "album";
+  return "playlist";
+}
+
+/** Extract feed context from the current queue item, or null if unavailable. */
+function extractFeedContext(): FeedContext | null {
+  const item = window.scPlayer?.getCurrentQueueItem?.();
+  if (!item) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SC internal queue item structure
+  const qi = item as any;
+  if (qi.sourceInfo?.type !== "stream") return null;
+
+  const attrs = qi.originalModel?.attributes;
+  const type = attrs?.type;
+  if (!type) return null;
+
+  const isRepost = type === "track-repost" || type === "playlist-repost";
+  const user = attrs?.user;
+  const pl = attrs?.playlist;
+
+  return {
+    verb: isRepost ? "reposted" : "posted",
+    posterName: isRepost && user?.username ? user.username : undefined,
+    posterUrl: isRepost && user?.permalink_url ? user.permalink_url : undefined,
+    date: attrs.created_at ?? "",
+    playlist: pl?.title
+      ? { title: pl.title, url: pl.permalink_url ?? "", label: playlistLabel(pl.set_type) }
+      : undefined,
+  };
 }
 
 /** Create a poller that updates PiP signals from SC's player state. */
@@ -73,6 +127,8 @@ export function createPipPoller(): PipPoller {
             }
           });
         }
+
+        feedContext.value = extractFeedContext();
       }
     }
 

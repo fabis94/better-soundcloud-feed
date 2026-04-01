@@ -57,6 +57,39 @@ interface SCRawSoundModel {
   getNumSounds(): number;
 }
 
+/** Backbone-style queue item returned by `getCurrentQueueItem()`. */
+interface SCRawQueueItem {
+  /** The original stream item model that queued this sound. */
+  originalModel: {
+    attributes: {
+      /** Activity type: `"track"`, `"track-repost"`, `"playlist"`, `"playlist-repost"`. */
+      type: string;
+      /** The user who posted or reposted. */
+      user: {
+        id: number;
+        username: string;
+        permalink_url: string;
+      };
+      /** ISO timestamp of the feed activity. */
+      created_at: string;
+      /** Present when the activity involves a playlist/single/album. */
+      playlist?: {
+        title: string;
+        permalink_url: string;
+        /** `"single"`, `"album"`, or other values for generic playlists. */
+        set_type: string;
+        is_album: boolean;
+      };
+    };
+  };
+  /** Where this queue item was loaded from. `"stream"` = feed page. */
+  sourceInfo: {
+    type: string;
+  };
+  /** The sound model for this queue item. */
+  sound: SCRawSoundModel;
+}
+
 interface SCRawQueueState {
   currentIndex: number;
   /** Observed values: `"none"`, `"one"`, `"all"`. */
@@ -97,7 +130,7 @@ interface SCRawPlayer {
   isPlaying(): boolean;
   /** Returns the current sound model, or `null` if nothing is loaded. */
   getCurrentSound(): SCRawSoundModel | null;
-  getCurrentQueueItem(): unknown;
+  getCurrentQueueItem(): SCRawQueueItem | null;
   getCurrentMetadata(): unknown;
   hasNextSound(): boolean;
   hasCurrentSound(): boolean;
@@ -133,6 +166,8 @@ interface SCRawPlayer {
 export type SCAudioPlayer = Deep<SCRawAudioPlayer>;
 /** @knipignore */
 export type SCSoundModel = Deep<SCRawSoundModel>;
+/** @knipignore */
+export type SCQueueItem = Deep<SCRawQueueItem>;
 /** @knipignore */
 export type SCQueueState = Deep<SCRawQueueState>;
 export type SCPlayer = Deep<SCRawPlayer>;

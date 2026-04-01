@@ -2,7 +2,7 @@ import { render } from "preact";
 import { useRef, useEffect } from "preact/hooks";
 import { useComputed } from "@preact/signals";
 import { REPO_URL } from "../../shared/constants";
-import { formatTime } from "../../shared/utils/format";
+import { formatTime, formatRelativeTime } from "../../shared/utils/format";
 import { seekOrSkip } from "../player/seek";
 import {
   trackTitle,
@@ -15,6 +15,7 @@ import {
   isPlaying,
   isLiked,
   waveformData,
+  feedContext,
   resetSignals,
   createPipPoller,
 } from "./poll";
@@ -86,11 +87,49 @@ function Header() {
           <SvgIcon html={isLiked.value ? heartFilledIcon : heartIcon} />
         </button>
       </div>
-      <div
-        class="pip-artist"
-        onClick={() => artistUrl.value && window.open(artistUrl.value, "_blank")}
-      >
-        {trackArtist.value}
+      <div class="pip-artist-row">
+        <span
+          class="pip-artist"
+          onClick={() => artistUrl.value && window.open(artistUrl.value, "_blank")}
+        >
+          {trackArtist.value}
+        </span>
+        {feedContext.value && (
+          <span class="pip-feed-context">
+            {" · "}
+            {feedContext.value.verb}
+            {feedContext.value.posterName && (
+              <>
+                {" by "}
+                <span
+                  class="pip-feed-context-link"
+                  onClick={() =>
+                    feedContext.value!.posterUrl &&
+                    window.open(feedContext.value!.posterUrl, "_blank")
+                  }
+                >
+                  {feedContext.value.posterName}
+                </span>
+              </>
+            )}
+            {feedContext.value.date && ` · ${formatRelativeTime(feedContext.value.date)}`}
+            {feedContext.value.playlist && (
+              <>
+                {" · in "}
+                {feedContext.value.playlist.label}{" "}
+                <span
+                  class="pip-feed-context-link"
+                  onClick={() =>
+                    feedContext.value!.playlist!.url &&
+                    window.open(feedContext.value!.playlist!.url, "_blank")
+                  }
+                >
+                  {feedContext.value.playlist.title}
+                </span>
+              </>
+            )}
+          </span>
+        )}
       </div>
     </div>
   );
