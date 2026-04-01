@@ -70,8 +70,7 @@ function extractFeedContext(): FeedContext | null {
   const item = window.scPlayer?.getCurrentQueueItem?.();
   if (!item) return null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SC internal queue item structure
-  const qi = item as any;
+  const qi = item;
   if (qi.sourceInfo?.type !== "stream") return null;
 
   const attrs = qi.originalModel?.attributes;
@@ -88,7 +87,11 @@ function extractFeedContext(): FeedContext | null {
     posterUrl: isRepost && user?.permalink_url ? user.permalink_url : undefined,
     date: attrs.created_at ?? "",
     playlist: pl?.title
-      ? { title: pl.title, url: pl.permalink_url ?? "", label: playlistLabel(pl.set_type) }
+      ? {
+          title: pl.title,
+          url: pl.permalink_url ?? "",
+          label: playlistLabel(pl.set_type),
+        }
       : undefined,
   };
 }

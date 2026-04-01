@@ -21,6 +21,7 @@ import {
 } from "./poll";
 import { renderWaveform, WAVEFORM_HEIGHT } from "./waveform";
 import { PIP_STYLES, copyThemeVariables } from "./styles";
+import { setupKeyboardForwarding } from "./keyboard";
 import playIcon from "./icons/play.svg?raw";
 import pauseIcon from "./icons/pause.svg?raw";
 import skipNextIcon from "./icons/skip-next.svg?raw";
@@ -273,6 +274,7 @@ export function buildPipDocument(pipWindow: Window): PipController {
 
   resetSignals();
   render(<PipApp dimColor={dimColor} activeColor={activeColor} />, pipDoc.body);
+  setupKeyboardForwarding(pipDoc);
 
   const poller = createPipPoller();
   return { startPolling: poller.start, stopPolling: poller.stop };
