@@ -11,6 +11,18 @@ function makeFilters(overrides: Partial<FilterState> = {}): FilterState {
   return { ...DEFAULT_FILTERS, ...overrides };
 }
 
+function setPathname(path: string) {
+  Object.defineProperty(window, "location", {
+    value: { ...window.location, pathname: path },
+    writable: true,
+    configurable: true,
+  });
+}
+
+beforeEach(() => {
+  setPathname("/feed");
+});
+
 // --- createFetchInterceptor ---
 
 describe("createFetchInterceptor", () => {
@@ -106,6 +118,35 @@ describe("createFetchInterceptor", () => {
     const calledInput = original.mock.calls[0]![0] as Request;
     expect(calledInput).toBeInstanceOf(Request);
     expect(calledInput.url).toContain("activityTypes=TrackPost");
+  });
+
+  it("passes stream URLs through untouched when not on /feed", async () => {
+    setPathname("/rinsefm");
+    const items = [
+      buildStreamItem({ type: "track", track: buildTrack({ title: "Keep Me" }) }),
+      buildStreamItem({ type: "track", track: buildTrack({ title: "Remove Me" }) }),
+    ];
+    const streamResponse = buildStreamResponse({ collection: items });
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(streamResponse)));
+
+    const intercepted = createFetchInterceptor(
+      original,
+      () => makeFilters({ searchString: "Keep Me", activityTypes: ["TrackPost"] }),
+      noopLog,
+    );
+
+    const response = await intercepted(
+      "https://api-v2.soundcloud.com/stream/users/338690?limit=10",
+    );
+
+    expect(original).toHaveBeenCalledWith(
+      "https://api-v2.soundcloud.com/stream/users/338690?limit=10",
+      undefined,
+    );
+    const data = await response.json();
+    expect(data.collection).toHaveLength(2);
   });
 
   it("passes string inputs as modified URL strings", async () => {
@@ -234,6 +275,27 @@ describe("patchXHR", () => {
     const result = JSON.parse(xhr.responseText);
     expect(result.collection).toHaveLength(1);
     expect(result.collection[0].track.title).toBe("Keep");
+  });
+
+  it("passes stream XHR URLs through untouched when not on /feed", () => {
+    setPathname("/rinsefm");
+    const calls: string[] = [];
+    const savedOrigOpen = origOpen;
+
+    XMLHttpRequest.prototype.open = function (_method: string, url: string | URL) {
+      calls.push(String(url));
+    };
+
+    patchXHR(() => makeFilters({ activityTypes: ["TrackPost"] }), noopLog);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "https://api-v2.soundcloud.com/stream/users/338690?limit=10");
+
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe("https://api-v2.soundcloud.com/stream/users/338690?limit=10");
+    expect(calls[0]).not.toContain("activityTypes");
+
+    XMLHttpRequest.prototype.open = savedOrigOpen;
   });
 
   it("leaves non-JSON XHR responses unmodified", () => {

@@ -1,6 +1,6 @@
 import type { SCStreamResponse, FilterState } from "../../shared/types";
 import { filterStreamResponse } from "../../shared/utils/filters";
-import { isStreamUrl, extractUrl, withActivityTypes } from "../../shared/utils/url";
+import { isStreamUrl, extractUrl, withActivityTypes, isFeedPage } from "../../shared/utils/url";
 
 interface Logger {
   debug: (msg: string, props?: Record<string, unknown>) => void;
@@ -22,7 +22,7 @@ export function createFetchInterceptor(
   ): Promise<Response> {
     const url = extractUrl(input);
 
-    if (!isStreamUrl(url)) {
+    if (!isStreamUrl(url) || !isFeedPage()) {
       return originalFetch.apply(this, [input, init]);
     }
 
@@ -90,7 +90,7 @@ export function patchXHR(getFilters: () => FilterState, log: Logger): void {
     this._interceptUrl = urlStr;
 
     const filters = getFilters();
-    const isIntercepted = isStreamUrl(urlStr);
+    const isIntercepted = isStreamUrl(urlStr) && isFeedPage();
     const finalUrl = isIntercepted ? withActivityTypes(urlStr, filters.activityTypes) : urlStr;
 
     if (isIntercepted) {
@@ -108,7 +108,7 @@ export function patchXHR(getFilters: () => FilterState, log: Logger): void {
     this: InterceptedXHR,
     body?: Document | XMLHttpRequestBodyInit | null,
   ) {
-    if (this._interceptUrl && isStreamUrl(this._interceptUrl)) {
+    if (this._interceptUrl && isStreamUrl(this._interceptUrl) && isFeedPage()) {
       const filters = getFilters();
       this.addEventListener("readystatechange", function (this: InterceptedXHR) {
         filterXHRResponse(this, filters, log);
