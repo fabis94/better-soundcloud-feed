@@ -1,5 +1,6 @@
-import { describe, it, expect } from "@voidzero-dev/vite-plus-test";
-import { isStreamUrl, extractUrl, withActivityTypes } from "./url";
+// @vitest-environment jsdom
+import { describe, it, expect, afterEach } from "@voidzero-dev/vite-plus-test";
+import { isStreamUrl, extractUrl, withActivityTypes, isFeedPage } from "./url";
 
 describe("isStreamUrl", () => {
   it("matches stream API URLs", () => {
@@ -72,5 +73,44 @@ describe("withActivityTypes", () => {
     expect(parsed.searchParams.get("limit")).toBe("20");
     expect(parsed.searchParams.get("offset")).toBe("0");
     expect(parsed.searchParams.get("activityTypes")).toBe("TrackPost");
+  });
+});
+
+describe("isFeedPage", () => {
+  function setPathname(path: string) {
+    Object.defineProperty(window, "location", {
+      value: { ...window.location, pathname: path },
+      writable: true,
+      configurable: true,
+    });
+  }
+
+  afterEach(() => {
+    setPathname("/");
+  });
+
+  it("returns true for /feed", () => {
+    setPathname("/feed");
+    expect(isFeedPage()).toBe(true);
+  });
+
+  it("returns false for /", () => {
+    setPathname("/");
+    expect(isFeedPage()).toBe(false);
+  });
+
+  it("returns false for /discover/feed", () => {
+    setPathname("/discover/feed");
+    expect(isFeedPage()).toBe(false);
+  });
+
+  it("returns false for an artist profile path", () => {
+    setPathname("/rinsefm");
+    expect(isFeedPage()).toBe(false);
+  });
+
+  it("returns false for /you/likes", () => {
+    setPathname("/you/likes");
+    expect(isFeedPage()).toBe(false);
   });
 });
