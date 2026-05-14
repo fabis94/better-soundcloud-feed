@@ -53,4 +53,13 @@ describe("openHelpModal", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(document.getElementById("scf-help-modal")).toBeNull();
   });
+
+  it("includes a feedback link pointing at the GitHub issues page", () => {
+    openHelpModal();
+    const modal = document.getElementById("scf-help-modal")!;
+    const link = modal.querySelector<HTMLAnchorElement>('a[href*="/issues"]');
+    expect(link).not.toBeNull();
+    expect(link!.target).toBe("_blank");
+    expect(link!.rel).toContain("noopener");
+  });
 });
