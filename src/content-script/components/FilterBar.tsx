@@ -3,6 +3,8 @@ import type { FilterState, SCActivityType } from "../../shared/types";
 import { SCActivityType as ActivityTypes } from "../../shared/types";
 import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
 import { formatActivityType } from "../feed/filter-bar";
+import { ISSUES_URL } from "../../shared/constants";
+import bugIcon from "../feed/icons/bug.svg?raw";
 
 interface FilterBarProps {
   initialFilters: FilterState;
@@ -241,6 +243,15 @@ export function FilterBar({
         >
           ?
         </button>
+        <button
+          type="button"
+          class="scf-btn scf-btn-feedback"
+          id="scf-feedback"
+          aria-label="Report a bug or send feedback"
+          title="Report a bug or send feedback"
+          onClick={() => window.open(ISSUES_URL, "_blank", "noopener,noreferrer")}
+          dangerouslySetInnerHTML={{ __html: bugIcon }}
+        />
       </div>
     </>
   );

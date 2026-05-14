@@ -259,6 +259,25 @@ div.stream__filter {
   flex-shrink: 0;
 }
 
+/* Feedback button */
+.scf-btn-feedback {
+  background: var(--highlight-color);
+  color: var(--secondary-color);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.scf-btn-feedback svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* Modal */
 .scf-modal-backdrop {
   position: fixed;

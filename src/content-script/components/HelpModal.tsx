@@ -1,4 +1,5 @@
 import { Modal, mountModal } from "./Modal";
+import { ISSUES_URL } from "../../shared/constants";
 
 const HELP_MODAL_ID = "scf-help-modal";
 
@@ -220,6 +221,22 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
         <p>
           Configure PiP in the <strong>Playback Settings</strong> dialog (gear icon). All PiP
           toggles are disabled if your browser doesn't support Document PiP.
+        </p>
+      </section>
+
+      <h2>Feedback &amp; Bug Reports</h2>
+
+      <section class="scf-modal-section">
+        <p>
+          Found a bug or have a feature request? Please file an issue on GitHub:{" "}
+          <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">
+            {ISSUES_URL}
+          </a>
+          .
+        </p>
+        <p>
+          You can also click the bug icon next to the <strong>?</strong> button in the filter bar to
+          open the issues page directly.
         </p>
       </section>
     </Modal>
