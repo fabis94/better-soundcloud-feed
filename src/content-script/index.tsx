@@ -11,11 +11,12 @@ import { injectPlayerControls } from "./player-controls";
 const log = createLogger("content-script");
 log.debug("Content script loaded, pathname: {path}", { path: location.pathname });
 
-// Inject the page-context script before SC's JS runs
-const script = document.createElement("script");
-script.src = chrome.runtime.getURL("injected.js");
-script.onload = () => script.remove();
-(document.head ?? document.documentElement).prepend(script);
+// NOTE: injected.js is not loaded from here. manifest.json declares it as a
+// `world: "MAIN"` content script at document_start so it patches fetch/XHR
+// synchronously before any SC script runs. A dynamically inserted <script> tag
+// is async and would race SC's first /stream request. On browsers without
+// `world` support the injected bundle detects the isolated world itself and
+// falls back to a <script> tag (see src/injected/world.ts).
 
 function renderFilterBar(container: HTMLElement, filters: FilterState): void {
   render(

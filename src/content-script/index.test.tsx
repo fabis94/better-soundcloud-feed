@@ -41,15 +41,6 @@ vi.mock("./player-controls", () => ({
   injectPlayerControls: vi.fn(() => false),
 }));
 
-// Stub chrome.runtime and chrome.storage before importing the module
-Object.defineProperty(globalThis, "chrome", {
-  value: {
-    runtime: { getURL: vi.fn((path: string) => `chrome-extension://fake/${path}`) },
-    storage: { local: { get: vi.fn(), set: vi.fn() } },
-  },
-  configurable: true,
-});
-
 // Must import after mocks are set up
 const { injectFilterUI } = await import("./index");
 

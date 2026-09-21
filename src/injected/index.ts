@@ -7,10 +7,27 @@ import { discoverPlayer } from "./discovery/player";
 import { discoverSocialActions } from "./discovery/social";
 import { handlePlayerCommand } from "./player/commands";
 import { setupAutoPip } from "./pip/index";
+import { isIsolatedWorld, injectViaScriptTag, detectLoadStyle } from "./world";
 
 const log = createLogger("injected");
 
 (function () {
+  // Browsers without `world: "MAIN"` support (Chrome/Edge < 111, Firefox < 128)
+  // ignore the manifest key and run this file in the isolated world, where
+  // patching fetch does nothing. Load ourselves into the page the legacy way
+  // (async <script> tag) and stop here — the page-world copy does the work.
+  if (isIsolatedWorld()) {
+    log.info(
+      "Running in isolated world (browser ignored world: MAIN), loading page copy via <script> tag fallback",
+    );
+    injectViaScriptTag();
+    return;
+  }
+
+  log.debug("Injected script running in page world, loaded via {loadStyle}", {
+    loadStyle: detectLoadStyle(),
+  });
+
   log.debug("Initial filters loaded from localStorage", {
     filters: filterStore.get(),
   });
