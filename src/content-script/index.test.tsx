@@ -17,6 +17,7 @@ const defaultFilters = {
   activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
   searchMode: "simple",
   searchString: "",
+  searchFields: ["title", "description", "genre", "artist", "label"],
   searchTitle: "",
   searchDescription: "",
   searchGenre: "",

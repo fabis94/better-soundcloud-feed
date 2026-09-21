@@ -1,8 +1,8 @@
 import { useSignal } from "@preact/signals";
-import type { FilterState, SCActivityType } from "../../shared/types";
-import { SCActivityType as ActivityTypes } from "../../shared/types";
+import type { FilterState, SCActivityType, SearchField } from "../../shared/types";
+import { SCActivityType as ActivityTypes, SearchField as SearchFields } from "../../shared/types";
 import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
-import { formatActivityType } from "../feed/filter-bar";
+import { formatActivityType, formatSearchField } from "../feed/filter-bar";
 import { ISSUES_URL } from "../../shared/constants";
 import bugIcon from "../feed/icons/bug.svg?raw";
 
@@ -25,6 +25,7 @@ export function FilterBar({
   const searchMode = useSignal<FilterState["searchMode"]>(initialFilters.searchMode);
   const searchOperator = useSignal<FilterState["searchOperator"]>(initialFilters.searchOperator);
   const searchString = useSignal(initialFilters.searchString);
+  const searchFields = useSignal<SearchField[]>([...initialFilters.searchFields]);
   const searchTitle = useSignal(initialFilters.searchTitle);
   const searchDescription = useSignal(initialFilters.searchDescription);
   const searchGenre = useSignal(initialFilters.searchGenre);
@@ -41,6 +42,7 @@ export function FilterBar({
     activityTypes: activityTypes.value,
     searchMode: searchMode.value,
     searchString: searchString.value,
+    searchFields: searchFields.value,
     searchTitle: searchTitle.value,
     searchDescription: searchDescription.value,
     searchGenre: searchGenre.value,
@@ -59,11 +61,20 @@ export function FilterBar({
     }
   };
 
+  const onSearchFieldChange = (field: SearchField, checked: boolean) => {
+    if (checked) {
+      searchFields.value = [...searchFields.value, field];
+    } else {
+      searchFields.value = searchFields.value.filter((f) => f !== field);
+    }
+  };
+
   const resetToDefaults = () => {
     activityTypes.value = [...DEFAULT_FILTERS.activityTypes];
     searchMode.value = DEFAULT_FILTERS.searchMode;
     searchOperator.value = DEFAULT_FILTERS.searchOperator;
     searchString.value = DEFAULT_FILTERS.searchString;
+    searchFields.value = [...DEFAULT_FILTERS.searchFields];
     searchTitle.value = DEFAULT_FILTERS.searchTitle;
     searchDescription.value = DEFAULT_FILTERS.searchDescription;
     searchGenre.value = DEFAULT_FILTERS.searchGenre;
@@ -81,6 +92,7 @@ export function FilterBar({
 
   const isExtended = searchMode.value === "extended";
   const allTypes = Object.values(ActivityTypes);
+  const allSearchFields = Object.values(SearchFields);
 
   return (
     <>
@@ -129,6 +141,24 @@ export function FilterBar({
             onInput={(e) => (searchString.value = (e.target as HTMLInputElement).value)}
           />
         </div>
+        <div
+          class="scf-search-fields"
+          id="scf-search-fields"
+          style={{ display: isExtended ? "none" : "flex" }}
+        >
+          <span class="scf-ext-label">Search in</span>
+          {allSearchFields.map((f) => (
+            <label class="scf-check" key={f}>
+              <input
+                type="checkbox"
+                data-search-field={f}
+                checked={searchFields.value.includes(f)}
+                onChange={(e) => onSearchFieldChange(f, (e.target as HTMLInputElement).checked)}
+              />
+              {" " + formatSearchField(f)}
+            </label>
+          ))}
+        </div>
         <div class="scf-search-extended" style={{ display: isExtended ? "flex" : "none" }}>
           <ExtField
             label="Title"
@@ -163,7 +193,7 @@ export function FilterBar({
             id="scf-search-label"
             value={searchLabel.value}
             onInput={(v) => (searchLabel.value = v)}
-            placeholder="label/publisher filter"
+            placeholder="label filter"
           />
         </div>
       </div>

@@ -2,7 +2,7 @@ import type { SCStreamItem, SCStreamResponse, FilterState } from "../types";
 import {
   parseSearchString,
   matchesSearch,
-  getAllSearchableText,
+  getSearchableText,
   getTitleText,
   getDescriptionText,
   getGenreText,
@@ -13,9 +13,10 @@ import {
 /** Check search filters against a single stream item. */
 function matchesSearchFilters(item: SCStreamItem, filters: FilterState): boolean {
   if (filters.searchMode === "simple") {
-    if (filters.searchString) {
+    // No ticked search areas = search inactive, mirroring extended mode with all inputs empty.
+    if (filters.searchString && filters.searchFields.length > 0) {
       const parsed = parseSearchString(filters.searchString);
-      const text = getAllSearchableText(item);
+      const text = getSearchableText(item, filters.searchFields);
       if (!matchesSearch(text, parsed, filters.searchOperator)) return false;
     }
   } else {

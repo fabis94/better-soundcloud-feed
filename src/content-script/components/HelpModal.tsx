@@ -33,14 +33,22 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
 
         <h4>Simple Mode</h4>
         <p>
-          A single search box that matches against all fields (title, artist, genre, description,
-          label).
+          A single search box that matches against all fields (title, description, genre, artist,
+          label). Use the <strong>Search in</strong> checkboxes below the box to leave fields out —
+          for example, untick Description so a track isn&apos;t matched just because its promo text
+          mentions a genre. With All selected, each term still only needs to appear in any one of
+          the ticked fields. If nothing is ticked, the search is ignored.
         </p>
 
         <h4>Extended Mode</h4>
         <p>
           Separate inputs for each field: Title, Description, Genre, Artist, and Label. Only
           non-empty fields are used.
+        </p>
+        <p>
+          In both modes, <strong>Artist</strong> covers the uploader, the reposter, and the release
+          artist SoundCloud shows on the track (which can differ from the uploader, e.g. on label
+          accounts).
         </p>
       </section>
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, type Mock } from "@voidzero-dev/vite-plus-test";
 import { render } from "preact";
-import { SCActivityType } from "../../shared/types";
+import { SCActivityType, SearchField } from "../../shared/types";
 import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
 import { FilterBar } from "./FilterBar";
 
@@ -43,6 +43,25 @@ describe("FilterBar render", () => {
     const checkboxes = container.querySelectorAll<HTMLInputElement>("input[data-activity]");
     const values = Array.from(checkboxes).map((cb) => cb.getAttribute("data-activity"));
     expect(values).toEqual(Object.values(SCActivityType));
+  });
+
+  it("contains a checked checkbox for every search field, shown in simple mode", () => {
+    setup();
+    const checkboxes = container.querySelectorAll<HTMLInputElement>("input[data-search-field]");
+    const values = Array.from(checkboxes).map((cb) => cb.getAttribute("data-search-field"));
+    expect(values).toEqual(Object.values(SearchField));
+    expect(Array.from(checkboxes).every((cb) => cb.checked)).toBe(true);
+    expect(container.querySelector<HTMLElement>(".scf-search-fields")!.style.display).toBe("flex");
+  });
+
+  it("labels the search field checkboxes", () => {
+    setup();
+    const row = container.querySelector<HTMLElement>(".scf-search-fields")!;
+    const labels = Array.from(row.querySelectorAll("label.scf-check")).map((l) =>
+      l.textContent!.trim(),
+    );
+    expect(labels).toEqual(["Title", "Description", "Genre", "Artist", "Label"]);
+    expect(row.textContent).toContain("Search in");
   });
 
   it("contains search input and extended search fields", () => {
@@ -96,6 +115,61 @@ describe("apply reads filters", () => {
     const filters = props.onApply.mock.calls[0]![0];
     expect(filters.activityTypes).not.toContain("TrackPost");
     expect(filters.activityTypes).toContain("TrackRepost");
+  });
+
+  it("reads all search fields by default", () => {
+    const props = setup();
+    container.querySelector<HTMLElement>("#scf-apply")!.click();
+    expect(props.onApply.mock.calls[0]![0].searchFields).toEqual(Object.values(SearchField));
+  });
+
+  it("excludes unchecked search fields", async () => {
+    const props = setup();
+    const cb = container.querySelector<HTMLInputElement>('input[data-search-field="description"]')!;
+    cb.checked = false;
+    cb.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 0));
+
+    container.querySelector<HTMLElement>("#scf-apply")!.click();
+    const filters = props.onApply.mock.calls[0]![0];
+    expect(filters.searchFields).not.toContain("description");
+    expect(filters.searchFields).toEqual(["title", "genre", "artist", "label"]);
+  });
+
+  it("re-checking a search field adds it back", async () => {
+    const props = setup({
+      initialFilters: { ...DEFAULT_FILTERS, searchFields: [SearchField.Title] },
+    });
+    const cb = container.querySelector<HTMLInputElement>('input[data-search-field="genre"]')!;
+    cb.checked = true;
+    cb.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 0));
+
+    container.querySelector<HTMLElement>("#scf-apply")!.click();
+    expect(props.onApply.mock.calls[0]![0].searchFields).toEqual(["title", "genre"]);
+  });
+
+  it("allows unchecking every search field", async () => {
+    const props = setup({
+      initialFilters: { ...DEFAULT_FILTERS, searchFields: [SearchField.Title] },
+    });
+    const cb = container.querySelector<HTMLInputElement>('input[data-search-field="title"]')!;
+    cb.checked = false;
+    cb.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 0));
+
+    container.querySelector<HTMLElement>("#scf-apply")!.click();
+    expect(props.onApply.mock.calls[0]![0].searchFields).toEqual([]);
+  });
+
+  it("does not call onApply when a search field is toggled (explicit apply)", async () => {
+    const props = setup();
+    const cb = container.querySelector<HTMLInputElement>('input[data-search-field="label"]')!;
+    cb.checked = false;
+    cb.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(props.onApply).not.toHaveBeenCalled();
+    expect(props.onApplyReload).not.toHaveBeenCalled();
   });
 
   it("reads operator from active pill button", async () => {
@@ -170,6 +244,20 @@ describe("initial state", () => {
     }
   });
 
+  it("unchecks search fields not in initial filters", () => {
+    setup({
+      initialFilters: {
+        ...DEFAULT_FILTERS,
+        searchFields: [SearchField.Title, SearchField.Genre],
+      },
+    });
+    const checkboxes = container.querySelectorAll<HTMLInputElement>("input[data-search-field]");
+    for (const cb of checkboxes) {
+      const field = cb.getAttribute("data-search-field");
+      expect(cb.checked).toBe(field === "title" || field === "genre");
+    }
+  });
+
   it("sets correct operator pill as active", () => {
     setup({ initialFilters: { ...DEFAULT_FILTERS, searchOperator: "or" } });
     const orBtn = container.querySelector<HTMLElement>('.scf-pill-btn[data-op="or"]')!;
@@ -184,6 +272,7 @@ describe("initial state", () => {
     expect(container.querySelector<HTMLElement>(".scf-search-extended")!.style.display).toBe(
       "flex",
     );
+    expect(container.querySelector<HTMLElement>(".scf-search-fields")!.style.display).toBe("none");
     expect(container.querySelector<HTMLElement>("#scf-mode-toggle")!.textContent!.trim()).toBe(
       "Simple Mode",
     );
@@ -223,6 +312,26 @@ describe("interactions", () => {
     expect(container.querySelector<HTMLElement>(".scf-search-extended")!.style.display).toBe(
       "flex",
     );
+  });
+
+  it("mode toggle hides the search field checkboxes and keeps their state", async () => {
+    const props = setup();
+    const cb = container.querySelector<HTMLInputElement>('input[data-search-field="description"]')!;
+    cb.checked = false;
+    cb.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 0));
+
+    const toggle = container.querySelector<HTMLElement>("#scf-mode-toggle")!;
+    toggle.click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(container.querySelector<HTMLElement>(".scf-search-fields")!.style.display).toBe("none");
+
+    toggle.click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(container.querySelector<HTMLElement>(".scf-search-fields")!.style.display).toBe("flex");
+
+    container.querySelector<HTMLElement>("#scf-apply")!.click();
+    expect(props.onApply.mock.calls[0]![0].searchFields).not.toContain("description");
   });
 
   it("mode toggle updates button text", async () => {
@@ -269,6 +378,20 @@ describe("interactions", () => {
     const filters = props.onApply.mock.calls[0]![0];
     expect(filters.searchString).toBe("");
     expect(filters.searchOperator).toBe("and");
+  });
+
+  it("clear button re-checks all search fields", async () => {
+    const props = setup({
+      initialFilters: { ...DEFAULT_FILTERS, searchFields: [SearchField.Title] },
+    });
+    container.querySelector<HTMLElement>("#scf-clear")!.click();
+    await new Promise((r) => setTimeout(r, 0));
+
+    const checkboxes = container.querySelectorAll<HTMLInputElement>("input[data-search-field]");
+    expect(Array.from(checkboxes).every((cb) => cb.checked)).toBe(true);
+
+    container.querySelector<HTMLElement>("#scf-apply")!.click();
+    expect(props.onApply.mock.calls[0]![0].searchFields).toEqual(Object.values(SearchField));
   });
 
   it("help button calls onHelp", () => {

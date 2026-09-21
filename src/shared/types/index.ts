@@ -13,7 +13,7 @@ export type {
   SCStreamResponse,
 } from "./sc-api";
 
-export { SCActivityType } from "./filters";
+export { SCActivityType, SearchField } from "./filters";
 /** @knipignore */
 export type { SCStreamParams, FilterState } from "./filters";
 

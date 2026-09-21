@@ -20,6 +20,7 @@ vi.mock("../shared/stores/filter-store", () => ({
       activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
       searchMode: "simple",
       searchString: "",
+      searchFields: ["title", "description", "genre", "artist", "label"],
       searchTitle: "",
       searchDescription: "",
       searchGenre: "",
