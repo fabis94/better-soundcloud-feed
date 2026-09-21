@@ -2,10 +2,11 @@
 import { describe, it, expect, vi } from "@voidzero-dev/vite-plus-test";
 import { BridgeMessageType } from "../shared/types";
 
-// Mock logger
+// Mock logger, capturing the injected logger's debug calls
+const { debugSpy } = vi.hoisted(() => ({ debugSpy: vi.fn() }));
 vi.mock("../shared/utils/logger", () => ({
   createLogger: () => ({
-    debug: vi.fn(),
+    debug: debugSpy,
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
@@ -66,6 +67,12 @@ const originalXHROpen = XMLHttpRequest.prototype.open;
 await import("./index");
 
 describe("injected module", () => {
+  it("logs the loading style at debug level", () => {
+    expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("loaded via {loadStyle}"), {
+      loadStyle: "main-world-content-script",
+    });
+  });
+
   it("patches window.fetch", () => {
     expect(window.fetch).not.toBe(originalFetch);
   });
