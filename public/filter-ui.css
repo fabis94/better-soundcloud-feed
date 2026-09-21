@@ -158,6 +158,16 @@ div.stream__filter {
   gap: var(--spacing-0_5x);
 }
 
+/* Simple mode: "Search in" area checkboxes. Full width so it wraps below the input,
+   in the same spot the extended-mode inputs occupy. */
+.scf-search-fields {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-1_5x);
+}
+
 .scf-ext-row {
   display: flex;
   align-items: center;

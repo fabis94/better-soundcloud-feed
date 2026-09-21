@@ -108,11 +108,15 @@ Output goes to `dist/`. Load `dist/` as an unpacked extension in the browser. No
 Controlled at request level — `activityTypes` query param is set on outgoing SC API requests. Values defined in `SCActivityType` const object (single source of truth). Derive labels with `formatActivityType()`.
 
 ### Search
-Two modes: **simple** (single input, matches all searchable text) and **extended** (per-field: title, description, genre, artist, label). Both support:
+Two modes: **simple** (single input, matched against the combined text of the ticked search areas) and **extended** (per-field: title, description, genre, artist, label). Both support:
 - Comma-delimited terms
 - `-exclude` prefix to reject matches
 - `*wildcard` glob patterns
 - AND/OR operator toggle (applies to both modes)
+
+Search areas are defined by the `SearchField` const object. In simple mode, `FilterState.searchFields` lists the ticked areas ("Search in" checkboxes, all ticked by default); `getSearchableText(item, fields)` in `search.ts` builds the text from only those areas. Terms match against the combined text, so with AND each term may come from a different ticked area. An empty `searchFields` means the search is ignored, mirroring extended mode with all inputs empty. `searchFields` has no effect in extended mode.
+
+The **Artist** area covers uploader (`track.user`), reposter (`item.user`) and the release artist (`publisher_metadata.artist`), which is the name SC displays on the track. **Label** is `label_name` only. Both modes share this definition via `FIELD_PARTS` in `search.ts`.
 
 ### Duration
 Min/max in minutes (UI) → stored as seconds → compared against `track.duration` (milliseconds). Tracks only.
@@ -185,6 +189,7 @@ Tests are colocated with the files they test (e.g., `filters.test.ts` next to `f
 ## Conventions
 
 - `SCActivityType` const object is the single source of truth for activity types. Derive arrays via `Object.values()`, labels via `formatActivityType()`.
+- `SearchField` const object is the single source of truth for search areas. Derive arrays via `Object.values()`, labels via `formatSearchField()`. Adding an area means adding it there and to `FIELD_PARTS` in `search.ts`.
 - Keep content script `index.tsx` lean — extract complex features into components or separate files.
 - MutationObserver runs without debounce. Injection functions short-circuit via `getElementById` when already injected.
 - All UI components are Preact functional components in `src/content-script/components/`. Use `useSignal()` from `@preact/signals` for local reactive state.

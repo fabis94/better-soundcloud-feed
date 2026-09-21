@@ -8,6 +8,7 @@ import {
   buildFilters,
   buildStreamResponse,
 } from "../../test/factories";
+import { SearchField } from "../types";
 
 describe("matchesFilters", () => {
   describe("simple search", () => {
@@ -91,7 +92,133 @@ describe("matchesFilters", () => {
     });
   });
 
+  describe("simple search fields", () => {
+    // Modelled on a real feed item: genre is Techno, but the promo description
+    // mentions "house-tempo" and "bass-heavy".
+    const wreck = () =>
+      buildStreamItem({
+        track: buildTrack({
+          title: "Peverelist - Wreck III",
+          genre: "Techno",
+          description: "a brooding house-tempo cut ... the bass-heavy jack of 'Wreck III'",
+          label_name: "Livity Sound Recordings",
+          user: buildUser({ username: "Livity Sound" }),
+        }),
+      });
+    const withoutDescription = Object.values(SearchField).filter(
+      (f) => f !== SearchField.Description,
+    );
+
+    it("matches via the description when all fields are searched (default)", () => {
+      const filters = buildFilters({ searchString: "house,garage,bass", searchOperator: "or" });
+      expect(matchesFilters(wreck(), filters)).toBe(true);
+    });
+
+    it("rejects the same item once description is deselected", () => {
+      const filters = buildFilters({
+        searchString: "house,garage,bass",
+        searchOperator: "or",
+        searchFields: withoutDescription,
+      });
+      expect(matchesFilters(wreck(), filters)).toBe(false);
+    });
+
+    it("still matches on the fields that remain selected", () => {
+      const filters = buildFilters({
+        searchString: "techno",
+        searchFields: [SearchField.Genre],
+      });
+      expect(matchesFilters(wreck(), filters)).toBe(true);
+    });
+
+    it("AND operator: terms may come from different selected fields", () => {
+      const filters = buildFilters({
+        searchString: "techno,livity",
+        searchOperator: "and",
+        searchFields: [SearchField.Genre, SearchField.Artist],
+      });
+      expect(matchesFilters(wreck(), filters)).toBe(true);
+    });
+
+    it("AND operator: fails when a term only exists in a deselected field", () => {
+      const filters = buildFilters({
+        searchString: "techno,livity",
+        searchOperator: "and",
+        searchFields: [SearchField.Genre],
+      });
+      expect(matchesFilters(wreck(), filters)).toBe(false);
+    });
+
+    it("excludes only apply to selected fields", () => {
+      const all = buildFilters({ searchString: "-house" });
+      const noDesc = buildFilters({ searchString: "-house", searchFields: withoutDescription });
+      expect(matchesFilters(wreck(), all)).toBe(false);
+      expect(matchesFilters(wreck(), noDesc)).toBe(true);
+    });
+
+    it("ignores the search entirely when no fields are selected", () => {
+      const filters = buildFilters({ searchString: "garage", searchFields: [] });
+      expect(matchesFilters(wreck(), filters)).toBe(true);
+    });
+
+    it("still applies duration when no fields are selected", () => {
+      const filters = buildFilters({
+        searchString: "garage",
+        searchFields: [],
+        maxDurationSeconds: 60,
+      });
+      expect(matchesFilters(wreck(), filters)).toBe(false);
+    });
+
+    it("applies selected fields to tracks inside playlists", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        track: undefined,
+        playlist: buildPlaylist({
+          title: "Some EP",
+          tracks: [buildTrack({ title: "Roller", description: "pure garage pressure" })],
+        }),
+      });
+      const all = buildFilters({ searchString: "garage" });
+      const noDesc = buildFilters({ searchString: "garage", searchFields: withoutDescription });
+      expect(matchesFilters(item, all)).toBe(true);
+      expect(matchesFilters(item, noDesc)).toBe(false);
+    });
+  });
+
   describe("extended search", () => {
+    it("ignores simple-mode searchFields", () => {
+      const item = buildStreamItem({ track: buildTrack({ title: "Garage", genre: "Techno" }) });
+      const filters = buildFilters({
+        searchMode: "extended",
+        searchTitle: "garage",
+        searchFields: [],
+      });
+      expect(matchesFilters(item, filters)).toBe(true);
+      expect(matchesFilters(item, { ...filters, searchTitle: "house" })).toBe(false);
+    });
+
+    it("matches the release artist under Artist, not Label", () => {
+      const item = buildStreamItem({
+        track: buildTrack({
+          user: buildUser({ username: "Livity Sound" }),
+          label_name: "Livity Sound Recordings",
+          publisher_metadata: {
+            id: 1,
+            urn: "x",
+            artist: "Peverelist",
+            contains_music: true,
+            isrc: "x",
+            explicit: false,
+          },
+        }),
+      });
+      const byArtist = buildFilters({ searchMode: "extended", searchArtist: "peverelist" });
+      const byLabel = buildFilters({ searchMode: "extended", searchLabel: "peverelist" });
+      expect(matchesFilters(item, byArtist)).toBe(true);
+      expect(matchesFilters(item, byLabel)).toBe(false);
+    });
+
     it("matches by title field only", () => {
       const item = buildStreamItem({ track: buildTrack({ title: "Garage", genre: "Techno" }) });
       const filters = buildFilters({ searchMode: "extended", searchTitle: "garage" });

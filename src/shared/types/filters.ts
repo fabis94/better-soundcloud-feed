@@ -27,10 +27,27 @@ export interface SCStreamParams {
 
 // --- Filter types ---
 
+/**
+ * Areas of a stream item that search can look at. Single source of truth:
+ * derive arrays via `Object.values()`, labels via `formatSearchField()`.
+ * Extended mode has one input per area; simple mode searches the ticked areas.
+ */
+export const SearchField = {
+  Title: "title",
+  Description: "description",
+  Genre: "genre",
+  Artist: "artist",
+  Label: "label",
+} as const;
+
+export type SearchField = (typeof SearchField)[keyof typeof SearchField];
+
 export interface FilterState {
   activityTypes: SCActivityType[];
   searchMode: "simple" | "extended";
   searchString: string;
+  /** Simple mode only: which areas `searchString` is matched against. Empty = search ignored. */
+  searchFields: SearchField[];
   searchTitle: string;
   searchDescription: string;
   searchGenre: string;

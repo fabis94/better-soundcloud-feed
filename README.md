@@ -47,13 +47,13 @@ After rebuilds, reload the extension in the browser to pick up changes.
 
 ### Feed Filters
 
-| Filter                | Behavior                                                                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Activity types**    | Checkboxes for track posts, track reposts, and playlist posts. Controls the `activityTypes` query param at the API level — unchecked types are never fetched. |
-| **Search (simple)**   | Single input matching against all fields (title, description, genre, artist, label).                                                                          |
-| **Search (extended)** | Per-field inputs: title, description, genre, artist, label. Only non-empty fields are checked.                                                                |
-| **Search syntax**     | Comma-separated terms, `-exclude` prefix, `*wildcard` globs, case-insensitive. AND/OR operator toggle.                                                        |
-| **Duration**          | Min/max in minutes. Applies to tracks only (not playlist totals).                                                                                             |
+| Filter                | Behavior                                                                                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Activity types**    | Checkboxes for track posts, track reposts, and playlist posts. Controls the `activityTypes` query param at the API level — unchecked types are never fetched.                                                                  |
+| **Search (simple)**   | Single input matching against all fields (title, description, genre, artist, label). "Search in" checkboxes let you leave fields out, e.g. untick Description to avoid matches on promo text. Nothing ticked = search ignored. |
+| **Search (extended)** | Per-field inputs: title, description, genre, artist, label. Only non-empty fields are checked. Artist covers uploader, reposter and the displayed release artist.                                                              |
+| **Search syntax**     | Comma-separated terms, `-exclude` prefix, `*wildcard` globs, case-insensitive. AND/OR operator toggle.                                                                                                                         |
+| **Duration**          | Min/max in minutes. Applies to tracks only (not playlist totals).                                                                                                                                                              |
 
 Changes only take effect when the user clicks **Apply** or **Apply & Reload**.
 

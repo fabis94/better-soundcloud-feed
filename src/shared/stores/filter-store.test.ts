@@ -17,7 +17,7 @@ Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, wri
 
 import { filterStore } from "./filter-store";
 import { buildFilters } from "../../test/factories";
-import { SCActivityType } from "../types";
+import { SCActivityType, SearchField } from "../types";
 
 beforeEach(() => {
   localStorageMock.clear();
@@ -31,8 +31,26 @@ describe("filterStore", () => {
     expect(filters.activityTypes).toHaveLength(Object.keys(SCActivityType).length);
     expect(filters.searchString).toBe("");
     expect(filters.searchMode).toBe("simple");
+    expect(filters.searchFields).toEqual(Object.values(SearchField));
     expect(filters.minDurationSeconds).toBeNull();
     expect(filters.maxDurationSeconds).toBeNull();
+  });
+
+  it("searches all fields for filters saved before searchFields existed", () => {
+    localStorageMock.setItem(
+      "bscf_filters",
+      JSON.stringify({ searchMode: "simple", searchString: "house,garage", searchOperator: "or" }),
+    );
+    filterStore.reload();
+    const filters = filterStore.get();
+    expect(filters.searchString).toBe("house,garage");
+    expect(filters.searchFields).toEqual(Object.values(SearchField));
+  });
+
+  it("round-trips a narrowed searchFields selection", () => {
+    filterStore.update(buildFilters({ searchFields: [SearchField.Title, SearchField.Genre] }));
+    filterStore.reload();
+    expect(filterStore.get().searchFields).toEqual([SearchField.Title, SearchField.Genre]);
   });
 
   it("merges stored values with defaults", () => {

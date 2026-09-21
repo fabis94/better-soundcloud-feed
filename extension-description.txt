@@ -9,7 +9,7 @@ Choose what shows up: track posts, track reposts, or playlist posts. Unchecked t
 
 Search
 Two modes:
-• Simple — a single search box that matches against title, description, genre, artist, and label
+• Simple — a single search box that matches against title, description, genre, artist, and label. Untick any of these to leave it out, e.g. skip descriptions so promo text doesn't cause false matches
 • Extended — separate inputs for each field, so you can filter by genre without accidentally matching titles
 
 Search supports comma-separated terms, -exclusions, and *wildcard patterns. Toggle between AND (all terms must match) and OR (any term matches).
