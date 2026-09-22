@@ -135,7 +135,7 @@ The **Artist** area covers uploader (`track.user`), reposter (`item.user`) and t
 Min/max in minutes (UI) → stored as seconds → compared against `track.duration` (milliseconds). Tracks only.
 
 ### Date
-`createdFrom` / `createdTo` are inclusive local calendar days (`"YYYY-MM-DD"` from `<input type="date">`; parsed by `src/shared/utils/date.ts`, never via `new Date(string)` which is UTC). Any-source rule: `item.created_at` (post/repost time on the feed) and the sound's `created_at` (upload time) are both candidates and one in range is enough; bare tag tracks have only the upload time. No parseable candidate → pass.
+`createdFrom` / `createdTo` are inclusive local calendar days (`"YYYY-MM-DD"` from `<input type="date">`; parsed by `src/shared/utils/date.ts`, never via `new Date(string)` which is UTC). Any-source rule: `item.created_at` (post/repost time on the feed) and `soundDate(sound)` — `display_date`, the date SC shows, with `created_at` (raw upload timestamp, often much older for scheduled releases) only as a fallback — are both candidates and one in range is enough; bare tag tracks have only the shown date. No parseable candidate → pass.
 
 ### Likes / plays / followers
 `minLikes`/`maxLikes`/`minPlays`/`maxPlays`/`minFollowers`/`maxFollowers`, inclusive, client-side everywhere (SC has no count filters). Followers follow the any-source rule via `anyInRange()`: the uploader's (or playlist owner's) and, on the feed, the reposter's `followers_count` — one in range is enough; sources SC omits are skipped. Missing counts pass. All numeric range checks share `inRange()` in `filters.ts`.
@@ -143,8 +143,8 @@ Min/max in minutes (UI) → stored as seconds → compared against `track.durati
 ### API-level buckets (Popular tab only)
 `src/shared/utils/sc-search.ts` maps exact ranges onto SC's coarse `/search/tracks` buckets, always choosing a *superset* so the client-side predicate does the exact refinement: `createdAtBucketFor(from)` (conservative window lengths plus a 15-minute grace margin so a later page keeps the same bucket) and `durationBucketFor(min, max)` (only when the range fits one band). Both keys are always set-or-deleted on the request because SC echoes them back in `next_href`.
 
-### Page-size boost
-When `hasClientSideFilters()` is true (anything but activity types), `withBoostedLimit()` multiplies `limit` by `PAGE_LIMIT_BOOST_RATIO` (2) on first-page requests only (`offset` absent or `0`) with a per-endpoint cap; later pages come from `next_href`, which already echoes the boosted value, so touching them would compound.
+### Page-size boost and cap
+`withPageLimit()` runs on every intercepted list request: when `hasClientSideFilters()` is true (anything but activity types) it multiplies `limit` by `PAGE_LIMIT_BOOST_RATIO` (2) on first-page requests (`offset` absent, empty or `0`), and it always clamps `limit` to the endpoint's cap (`/recent-tracks` 50, others 200). The clamp is not optional: SC's lazy list grows its own page size whenever a page comes back short (10 → 20 → 40 → 80 observed once filtering thinned pages), and `/recent-tracks` answers 400 above 50, which surfaces as SC's "Sorry, something went wrong". Later pages are otherwise untouched — `next_href` echoes the boosted value, so multiplying again would compound.
 
 ### Playlist filtering
 A playlist with tracks passes if the playlist metadata itself (search, date, `likes_count`, owner's/poster's followers) OR any individual track within it (search, date, duration, likes, plays, followers) matches; the playlist-level check is skipped while a track-only filter (duration, plays) is active. Bare tracks from the tag endpoints reuse the same `matchesFilters()` via `trackToStreamItem()` / `filterTrackResponse()`.

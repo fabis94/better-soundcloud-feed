@@ -22,7 +22,7 @@ Set a minimum and/or maximum track length in minutes. Great for skipping intros,
 The next few live under a collapsible "More filters" toggle (it remembers whether you left it open), so the panel stays compact if you never need them.
 
 Date
-Pick a from/to date range with your browser's date picker. On the feed an item counts if either the time it was posted or reposted, or the track's upload date, falls in the range; on tag pages it's the upload date, so you can see only what's new for a tag.
+Pick a from/to date range with your browser's date picker. It always uses the date SoundCloud shows on the track. On the feed an item counts if either the time it was posted or reposted, or that date, falls in the range; on tag pages it's that date alone, so you can see only what's new for a tag.
 
 Likes, plays & followers
 Set minimum and/or maximum like and play counts, or a follower-count range that the uploader or whoever reposted the item must fall into. A maximum is a great way to surface under-the-radar tracks and artists nobody has found yet.

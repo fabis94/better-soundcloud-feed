@@ -60,19 +60,25 @@ export function withActivityTypes(url: string, activityTypes: SCActivityType[]):
 export const PAGE_LIMIT_BOOST_RATIO = 2;
 
 /**
- * Multiply `limit` on a first-page request (`offset` absent or `0`) and cap it.
- * Later pages come from `next_href`, which already echoes the boosted value, so
- * they are returned untouched — otherwise the limit would compound page after
- * page. A missing or non-numeric `limit` is never invented.
+ * Page-size control for an intercepted list request:
+ * - a first-page request (`offset` absent, empty or `0`) gets `limit × ratio`;
+ * - every request is clamped to `cap`, because SC's lazy list grows its own page
+ *   size when pages come back short (10 → 20 → 40 → 80 was observed once our
+ *   filtering thinned them) and `/recent-tracks` rejects anything above 50.
+ * Later pages are otherwise left alone: `next_href` already echoes the boosted
+ * value, so multiplying again would compound. A missing or non-numeric `limit`
+ * is never invented.
  */
-export function withBoostedLimit(url: string, ratio: number, cap: number): string {
+export function withPageLimit(url: string, ratio: number, cap: number): string {
   const parsed = new URL(url);
-  const offset = parsed.searchParams.get("offset");
-  if (offset !== null && offset !== "0") return url;
-
   const limit = Number(parsed.searchParams.get("limit"));
   if (!Number.isInteger(limit) || limit <= 0) return url;
 
-  parsed.searchParams.set("limit", String(Math.min(cap, limit * ratio)));
+  const offset = parsed.searchParams.get("offset");
+  const isFirstPage = offset === null || offset === "" || offset === "0";
+  const wanted = Math.min(cap, isFirstPage ? limit * ratio : limit);
+  if (wanted === limit) return url;
+
+  parsed.searchParams.set("limit", String(wanted));
   return parsed.toString();
 }

@@ -6,7 +6,7 @@ import {
   extractUrl,
   withQueryParams,
   withActivityTypes,
-  withBoostedLimit,
+  withPageLimit,
 } from "./url";
 
 describe("isStreamUrl", () => {
@@ -164,40 +164,57 @@ describe("withActivityTypes", () => {
   });
 });
 
-describe("withBoostedLimit", () => {
+describe("withPageLimit", () => {
   const limitOf = (url: string) => new URL(url).searchParams.get("limit");
 
   it("multiplies the limit of a first-page request", () => {
-    expect(limitOf(withBoostedLimit("https://x.test/a?limit=10&offset=0", 2, 200))).toBe("20");
+    expect(limitOf(withPageLimit("https://x.test/a?limit=10&offset=0", 2, 200))).toBe("20");
   });
 
-  it("treats a missing offset as the first page", () => {
-    expect(limitOf(withBoostedLimit("https://x.test/a?limit=10", 2, 200))).toBe("20");
+  it("treats a missing or empty offset as the first page", () => {
+    expect(limitOf(withPageLimit("https://x.test/a?limit=10", 2, 200))).toBe("20");
+    expect(limitOf(withPageLimit("https://x.test/a?limit=10&offset=", 2, 200))).toBe("20");
   });
 
   it("caps the boosted limit", () => {
-    expect(limitOf(withBoostedLimit("https://x.test/a?limit=30&offset=0", 2, 50))).toBe("50");
+    expect(limitOf(withPageLimit("https://x.test/a?limit=30&offset=0", 2, 50))).toBe("50");
   });
 
-  it("leaves later pages untouched (they already echo the boosted value)", () => {
+  it("leaves later pages untouched when they are within the cap", () => {
     const numeric = "https://x.test/a?limit=20&offset=20";
-    expect(withBoostedLimit(numeric, 2, 200)).toBe(numeric);
+    expect(withPageLimit(numeric, 2, 200)).toBe(numeric);
     const cursor =
       "https://x.test/a?offset=2026-09-21T21%3A22%3A13.000Z%2Crecent-content-tracks-by-tag%2Csoundcloud%3Atracks%3A1&limit=20";
-    expect(withBoostedLimit(cursor, 2, 200)).toBe(cursor);
+    expect(withPageLimit(cursor, 2, 200)).toBe(cursor);
+  });
+
+  it("clamps later pages that exceed the cap (SC grows its page size after short pages)", () => {
+    const cursor =
+      "https://x.test/a?offset=2026-09-17T22%3A51%3A00.000Z%2Crecent-content-tracks-by-tag%2Csoundcloud%3Atracks%3A1&limit=80";
+    expect(limitOf(withPageLimit(cursor, 2, 50))).toBe("50");
+    expect(new URL(withPageLimit(cursor, 2, 50)).searchParams.get("offset")).toContain(
+      "recent-content-tracks-by-tag",
+    );
+  });
+
+  it("only clamps when the ratio is 1", () => {
+    expect(withPageLimit("https://x.test/a?limit=10&offset=0", 1, 50)).toBe(
+      "https://x.test/a?limit=10&offset=0",
+    );
+    expect(limitOf(withPageLimit("https://x.test/a?limit=80&offset=0", 1, 50))).toBe("50");
   });
 
   it("never invents a limit", () => {
     const noLimit = "https://x.test/a?offset=0";
-    expect(withBoostedLimit(noLimit, 2, 200)).toBe(noLimit);
+    expect(withPageLimit(noLimit, 2, 200)).toBe(noLimit);
     const bad = "https://x.test/a?limit=abc&offset=0";
-    expect(withBoostedLimit(bad, 2, 200)).toBe(bad);
+    expect(withPageLimit(bad, 2, 200)).toBe(bad);
     const zero = "https://x.test/a?limit=0";
-    expect(withBoostedLimit(zero, 2, 200)).toBe(zero);
+    expect(withPageLimit(zero, 2, 200)).toBe(zero);
   });
 
   it("keeps the other params", () => {
-    const parsed = new URL(withBoostedLimit("https://x.test/a?q=*&limit=10&offset=0", 2, 200));
+    const parsed = new URL(withPageLimit("https://x.test/a?q=*&limit=10&offset=0", 2, 200));
     expect(parsed.searchParams.get("q")).toBe("*");
     expect(parsed.searchParams.get("offset")).toBe("0");
   });

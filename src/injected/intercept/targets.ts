@@ -12,7 +12,7 @@ import {
   isTagSearchUrl,
   withActivityTypes,
   withQueryParams,
-  withBoostedLimit,
+  withPageLimit,
   PAGE_LIMIT_BOOST_RATIO,
 } from "../../shared/utils/url";
 
@@ -36,8 +36,9 @@ export interface InterceptTarget {
 const RECENT_TRACKS_MAX_LIMIT = 50;
 const DEFAULT_MAX_LIMIT = 200;
 
+/** Always clamp to the endpoint's cap; additionally boost the first page while client-side filters thin pages out. */
 function boostIfFiltering(url: string, filters: FilterState, cap: number): string {
-  return hasClientSideFilters(filters) ? withBoostedLimit(url, PAGE_LIMIT_BOOST_RATIO, cap) : url;
+  return withPageLimit(url, hasClientSideFilters(filters) ? PAGE_LIMIT_BOOST_RATIO : 1, cap);
 }
 
 export const INTERCEPT_TARGETS: Record<PageKind, InterceptTarget> = {

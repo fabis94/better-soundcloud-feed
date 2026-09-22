@@ -147,12 +147,14 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
         <ul>
           <li>
             On the feed (row labelled <strong>Date</strong>) an item passes if <em>either</em> the
-            time it was posted or reposted <em>or</em> the track&apos;s upload date falls in the
-            range. So a fresh repost of an old track counts as recent, and it also counts as old.
+            time it was posted or reposted <em>or</em> the date SoundCloud shows on the track (its
+            release date) falls in the range. So a fresh repost of an old track counts as recent,
+            and it also counts as old.
           </li>
           <li>
-            On tag pages (labelled <strong>Uploaded</strong>) only the track&apos;s upload date
-            exists.
+            On tag pages (labelled <strong>Uploaded</strong>) it is the date shown on the track —
+            the same &quot;posted 2 days ago&quot; you see in the list, so the filter always agrees
+            with what is displayed.
           </li>
         </ul>
         <p>

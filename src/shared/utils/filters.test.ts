@@ -5,6 +5,7 @@ import {
   filterTrackResponse,
   trackToStreamItem,
   hasClientSideFilters,
+  soundDate,
 } from "./filters";
 import {
   buildStreamItem,
@@ -464,6 +465,32 @@ describe("date range", () => {
     expect(matchesFilters(repostOfOldTrack, between)).toBe(false);
   });
 
+  it("reads the date SoundCloud shows (display_date), not the raw upload timestamp", () => {
+    // Scheduled release: uploaded in August, released (and shown) on Sep 22.
+    const scheduled = buildStreamItem({
+      created_at: localIso(2026, 9, 22),
+      track: buildTrack({ created_at: localIso(2026, 8, 18), display_date: localIso(2026, 9, 22) }),
+    });
+    expect(matchesFilters(scheduled, buildFilters({ createdTo: "2026-09-17" }))).toBe(false);
+    expect(matchesFilters(scheduled, buildFilters({ createdFrom: "2026-09-21" }))).toBe(true);
+
+    // Bare tag-page track: same rule through trackToStreamItem.
+    const bare = trackToStreamItem(
+      buildTrack({ created_at: localIso(2025, 10, 8), display_date: localIso(2026, 9, 21) }),
+    );
+    expect(bare.created_at).toBe(localIso(2026, 9, 21));
+    expect(matchesFilters(bare, buildFilters({ createdTo: "2026-09-17" }))).toBe(false);
+    expect(matchesFilters(bare, buildFilters({ createdFrom: "2026-09-20" }))).toBe(true);
+  });
+
+  it("falls back to created_at when display_date is missing", () => {
+    const item = buildStreamItem({
+      created_at: localIso(2026, 9, 22),
+      track: buildTrack({ created_at: localIso(2015, 1, 1), display_date: undefined }),
+    });
+    expect(matchesFilters(item, buildFilters({ createdTo: "2020-01-01" }))).toBe(true);
+  });
+
   it("checks playlist posts by their post time and by each track's upload time", () => {
     const old = buildFilters({ createdTo: "2020-01-01" });
     const freshPlaylist = buildStreamItem({
@@ -788,5 +815,19 @@ describe("uploader followers", () => {
   it("counts as a client-side filter", () => {
     expect(hasClientSideFilters(buildFilters({ minFollowers: 1 }))).toBe(true);
     expect(hasClientSideFilters(buildFilters({ maxFollowers: 1 }))).toBe(true);
+  });
+});
+
+describe("soundDate", () => {
+  it("prefers display_date and falls back to created_at", () => {
+    expect(
+      soundDate(
+        buildTrack({ created_at: "2025-01-01T00:00:00Z", display_date: "2026-09-22T00:00:00Z" }),
+      ),
+    ).toBe("2026-09-22T00:00:00Z");
+    expect(
+      soundDate(buildTrack({ created_at: "2025-01-01T00:00:00Z", display_date: undefined })),
+    ).toBe("2025-01-01T00:00:00Z");
+    expect(soundDate(undefined)).toBeUndefined();
   });
 });

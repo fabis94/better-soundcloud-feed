@@ -104,10 +104,19 @@ describe("tagRecent target", () => {
     );
   });
 
-  it("does not touch cursor pages", () => {
+  it("does not touch cursor pages within the cap", () => {
     const next =
       "https://api-v2.soundcloud.com/recent-tracks/speed%20garage?offset=2026-09-21T21%3A22%3A13.000Z%2Crecent-content-tracks-by-tag%2Csoundcloud%3Atracks%3A1&limit=20";
     expect(target.buildRequestUrl(next, buildFilters({ minLikes: 1 }))).toBe(next);
+  });
+
+  it("clamps any page SC grew beyond the endpoint's cap, even without client filters", () => {
+    const grown =
+      "https://api-v2.soundcloud.com/recent-tracks/speed%20garage?offset=2026-09-17T22%3A51%3A00.000Z%2Crecent-content-tracks-by-tag%2Csoundcloud%3Atracks%3A1&limit=80";
+    expect(params(target.buildRequestUrl(grown, buildFilters({ minLikes: 1 }))).get("limit")).toBe(
+      "50",
+    );
+    expect(params(target.buildRequestUrl(grown, buildFilters())).get("limit")).toBe("50");
   });
 
   it("filters bare tracks", () => {

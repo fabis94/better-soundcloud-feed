@@ -2,6 +2,7 @@ import type {
   SCStreamItem,
   SCStreamResponse,
   SCTrack,
+  SCPlaylist,
   SCTrackCollectionResponse,
   FilterState,
 } from "../types";
@@ -117,8 +118,18 @@ function matchesFollowers(item: SCStreamItem, filters: FilterState): boolean {
 }
 
 /**
+ * The date SoundCloud shows on a track or playlist and orders lists by
+ * (`display_date`, the release date). `created_at` is the raw upload timestamp,
+ * which for scheduled or re-published sounds can be much older than what users
+ * see, so it is only a fallback.
+ */
+export function soundDate(sound: SCTrack | SCPlaylist | undefined): string | undefined {
+  return (sound as { display_date?: string } | undefined)?.display_date ?? sound?.created_at;
+}
+
+/**
  * Date range with the "any source" rule: the item's own time (post/repost time on
- * the feed) and the sound's upload time are both candidates, so a fresh repost of
+ * the feed) and the sound's shown date are both candidates, so a fresh repost of
  * an old track passes a "recent" range and also an "old" one. Unset bounds, or no
  * parseable candidate, pass.
  */
@@ -127,7 +138,7 @@ function matchesDateRange(item: SCStreamItem, filters: FilterState): boolean {
   if (start == null && endExclusive == null) return true;
 
   const sound = item?.track ?? item?.playlist;
-  const times = [item?.created_at, sound?.created_at]
+  const times = [item?.created_at, soundDate(sound)]
     .map((iso) => (iso ? Date.parse(iso) : Number.NaN))
     .filter((time) => !Number.isNaN(time));
   if (times.length === 0) return true;
@@ -204,10 +215,10 @@ export function filterStreamResponse(
 
 /**
  * Wrap a bare track (tag-page endpoints) as a stream item so every predicate
- * applies unchanged. The upload date doubles as the item date.
+ * applies unchanged. The date SC shows for the track doubles as the item date.
  */
 export function trackToStreamItem(track: SCTrack): SCStreamItem {
-  return { type: "track", track, created_at: track?.created_at };
+  return { type: "track", track, created_at: soundDate(track) };
 }
 
 /** Filter a bare-track collection (`/recent-tracks`, `/search/tracks`); pagination fields pass through. */
