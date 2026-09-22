@@ -288,3 +288,22 @@ describe("getSearchableText with selected fields", () => {
     expect(getSearchableText(playlistItem, [SearchField.Label])).toBe("1985 Music");
   });
 });
+
+describe("extended-mode extractors on playlists", () => {
+  const playlistItem = buildStreamItem({
+    type: "playlist",
+    playlist: {
+      ...buildPlaylist({ title: "Compilation" }),
+      description: "Label showcase",
+      label_name: "Livity Sound",
+    } as ReturnType<typeof buildPlaylist>,
+  });
+
+  it("getDescriptionText reads the playlist description", () => {
+    expect(getDescriptionText(playlistItem)).toBe("Label showcase");
+  });
+
+  it("getLabelText reads the playlist label", () => {
+    expect(getLabelText(playlistItem)).toBe("Livity Sound");
+  });
+});

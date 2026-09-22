@@ -52,14 +52,25 @@ Do NOT include developer details, architecture, or setup instructions.
 
 ### 4. Help Modal (in-app user manual)
 
-**File:** `src/content-script/help-modal.ts`
+**File:** `src/content-script/components/HelpModal.tsx`
 **Audience:** End users of the extension, accessed via the ? button.
 **Contains:** HTML content explaining all features, search syntax, and controls.
-**Style:** HTML sections with h2/h3/h4 headings, ul/li lists, code tags for syntax. Matches existing structure.
+**Style:** Preact JSX sections with h2/h3/h4 headings, ul/li lists, code tags for syntax. Matches existing structure.
 
 Update when: user-facing features, search syntax, controls, settings, or behavior change.
 
 Keep structure consistent with existing sections. Add new sections for new feature categories; extend existing sections for enhancements.
+
+### 5. Filter Pages Reference (developer-facing)
+
+**File:** `<%= instructionPath('filter-pages') %>`
+**Audience:** Future developers and AI assistants adding filters or page kinds.
+**Contains:** Page-kind table, endpoint table (params honoured/ignored, limits, response TS types), filter matrix, add-a-filter / add-a-page checklists.
+**Style:** Tables + terse checklists. Facts are "verified" only after checking the live API (`inspect-sc-api` skill).
+
+Update when: a page kind, endpoint, request param, response type, filter field or where-it-applies changes.
+
+**Important:** After editing, run `pnpm uac generate`.
 
 ## Process
 

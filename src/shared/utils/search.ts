@@ -120,7 +120,7 @@ export function getTitleText(item: SCStreamItem): string {
 }
 
 export function getDescriptionText(item: SCStreamItem): string {
-  return (item?.track as { description?: string } | undefined)?.description ?? "";
+  return FIELD_PARTS[SearchField.Description](item).join("\n");
 }
 
 export function getGenreText(item: SCStreamItem): string {
@@ -133,5 +133,5 @@ export function getArtistText(item: SCStreamItem): string {
 }
 
 export function getLabelText(item: SCStreamItem): string {
-  return (item?.track as { label_name?: string } | undefined)?.label_name ?? "";
+  return FIELD_PARTS[SearchField.Label](item).join("\n");
 }

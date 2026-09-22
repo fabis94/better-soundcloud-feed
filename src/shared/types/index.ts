@@ -11,6 +11,7 @@ export type {
   SCPlaylist,
   SCStreamItem,
   SCStreamResponse,
+  SCTrackCollectionResponse,
 } from "./sc-api";
 
 export { SCActivityType, SearchField } from "./filters";
@@ -45,3 +46,6 @@ export type {
 
 export type { ExtensionSettings } from "./settings";
 export { DEFAULT_SETTINGS } from "./settings";
+
+export type { UiState } from "./ui";
+export { DEFAULT_UI_STATE } from "./ui";

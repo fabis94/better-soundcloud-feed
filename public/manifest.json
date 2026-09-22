@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Better SoundCloud Feed",
   "version": "0.1.0",
-  "description": "Filter your SoundCloud feed by duration, artist, title and more.",
+  "description": "Filter your SoundCloud feed and tag pages by date, duration, likes, plays, artist, title and more.",
   "content_scripts": [
     {
       "matches": ["https://soundcloud.com/*"],

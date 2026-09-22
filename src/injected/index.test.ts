@@ -14,8 +14,8 @@ vi.mock("../shared/utils/logger", () => ({
 }));
 
 // Mock storage
-vi.mock("../shared/stores/filter-store", () => ({
-  filterStore: {
+vi.mock("../shared/stores/filter-store", () => {
+  const store = {
     get: () => ({
       activityTypes: ["TrackPost", "TrackRepost", "PlaylistPost"],
       searchMode: "simple",
@@ -29,9 +29,18 @@ vi.mock("../shared/stores/filter-store", () => ({
       searchOperator: "and",
       minDurationSeconds: null,
       maxDurationSeconds: null,
+      createdFrom: null,
+      createdTo: null,
+      minLikes: null,
+      maxLikes: null,
+      minPlays: null,
+      maxPlays: null,
+      minFollowers: null,
+      maxFollowers: null,
     }),
-  },
-}));
+  };
+  return { filterStore: store, tagFilterStore: store, getFilterStore: () => store };
+});
 
 // Mock settings store
 vi.mock("../shared/stores/settings-store", () => ({

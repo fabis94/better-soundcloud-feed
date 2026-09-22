@@ -79,6 +79,38 @@ div.stream__filter {
   gap: var(--spacing-1x);
 }
 
+/* Branding line at the top of the bar: small and muted, like the PiP footer */
+.scf-branding {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-0_5x);
+  align-self: flex-start;
+  margin-bottom: calc(-1 * var(--spacing-0_5x));
+  font-size: var(--typography-micro-font-size);
+  color: var(--secondary-color);
+  opacity: 0.8;
+  text-decoration: none;
+}
+
+/* Same muted colour in every link state — SC's global a:visited must not recolour it */
+.scf-branding:link,
+.scf-branding:visited,
+.scf-branding:hover,
+.scf-branding:active {
+  color: var(--secondary-color);
+}
+
+.scf-branding:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.scf-branding-icon svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
 .scf-row {
   display: flex;
   align-items: center;
@@ -127,21 +159,90 @@ div.stream__filter {
   color: var(--input-placeholder-font-color);
 }
 
-/* Duration inputs */
+/* Min/Max number inputs (duration, likes, plays) */
 .scf-input-small {
   flex: 0 0 auto;
   min-width: 70px;
   max-width: 80px;
 }
 
-.scf-duration-label {
+/* "Min" / "Max" / "From" / "To" captions next to range inputs */
+.scf-sublabel {
   color: var(--secondary-color);
   font-size: var(--typography-micro-font-size);
+}
+
+/* Date inputs: the browser's native picker inside an SC-styled box (see .scf-input).
+   SC switches themes with body.theme-dark; color-scheme makes Chromium's calendar
+   icon and popup follow it. */
+.scf-input-date {
+  flex: 0 0 auto;
+  min-width: 150px;
+  max-width: 170px;
+  color-scheme: light;
+}
+
+body.theme-dark .scf-input-date {
+  color-scheme: dark;
 }
 
 .scf-hint {
   color: var(--secondary-color);
   font-size: var(--typography-micro-font-size);
+}
+
+/* "More filters" accordion (date, likes, plays). The toggle reads like a row label. */
+.scf-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1x);
+}
+
+.scf-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-0_75x);
+  align-self: flex-start;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: var(--typography-heading5-font-weight);
+  color: var(--special-color);
+}
+
+.scf-advanced-toggle:hover {
+  text-decoration: underline;
+}
+
+.scf-advanced-chevron {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+}
+
+/* Number of filters set inside the collapsed section (names in the tooltip) */
+.scf-advanced-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 var(--spacing-0_5x);
+  border-radius: 1em;
+  background: var(--special-color);
+  color: var(--white-color);
+  font-size: var(--typography-micro-font-size);
+  font-weight: var(--typography-heading5-font-weight);
+  line-height: 1;
+}
+
+.scf-advanced-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1x);
 }
 
 /* Simple/Extended search containers */

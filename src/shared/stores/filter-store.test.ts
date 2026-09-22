@@ -15,14 +15,16 @@ const localStorageMock = {
 };
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock, writable: true });
 
-import { filterStore } from "./filter-store";
+import { filterStore, tagFilterStore, getFilterStore } from "./filter-store";
 import { buildFilters } from "../../test/factories";
 import { SCActivityType, SearchField } from "../types";
+import { PageKind } from "../pages";
 
 beforeEach(() => {
   localStorageMock.clear();
   vi.clearAllMocks();
   filterStore.reload();
+  tagFilterStore.reload();
 });
 
 describe("filterStore", () => {
@@ -34,6 +36,44 @@ describe("filterStore", () => {
     expect(filters.searchFields).toEqual(Object.values(SearchField));
     expect(filters.minDurationSeconds).toBeNull();
     expect(filters.maxDurationSeconds).toBeNull();
+    expect(filters.createdFrom).toBeNull();
+    expect(filters.createdTo).toBeNull();
+    expect(filters.minLikes).toBeNull();
+    expect(filters.maxLikes).toBeNull();
+    expect(filters.minPlays).toBeNull();
+    expect(filters.maxPlays).toBeNull();
+    expect(filters.minFollowers).toBeNull();
+    expect(filters.maxFollowers).toBeNull();
+  });
+
+  it("fills in the date/likes/plays fields for filters saved before they existed", () => {
+    localStorageMock.setItem(
+      "bscf_filters",
+      JSON.stringify({ searchString: "garage", minDurationSeconds: 60 }),
+    );
+    filterStore.reload();
+    const filters = filterStore.get();
+    expect(filters.searchString).toBe("garage");
+    expect(filters.createdFrom).toBeNull();
+    expect(filters.minLikes).toBeNull();
+    expect(filters.maxPlays).toBeNull();
+  });
+
+  it("round-trips the date/likes/plays fields", () => {
+    filterStore.update(
+      buildFilters({
+        createdFrom: "2026-09-01",
+        createdTo: "2026-09-30",
+        minLikes: 5,
+        maxPlays: 900,
+      }),
+    );
+    filterStore.reload();
+    const filters = filterStore.get();
+    expect(filters.createdFrom).toBe("2026-09-01");
+    expect(filters.createdTo).toBe("2026-09-30");
+    expect(filters.minLikes).toBe(5);
+    expect(filters.maxPlays).toBe(900);
   });
 
   it("searches all fields for filters saved before searchFields existed", () => {
@@ -110,5 +150,29 @@ describe("filterStore", () => {
       });
       expect(filterStore.isAvailable()).toBe(false);
     });
+  });
+});
+
+describe("tagFilterStore / getFilterStore", () => {
+  it("maps the feed to filterStore and both tag tabs to tagFilterStore", () => {
+    expect(getFilterStore(PageKind.Feed)).toBe(filterStore);
+    expect(getFilterStore(PageKind.TagRecent)).toBe(tagFilterStore);
+    expect(getFilterStore(PageKind.TagPopular)).toBe(tagFilterStore);
+  });
+
+  it("persists under its own key, independent of the feed", () => {
+    tagFilterStore.update(buildFilters({ searchString: "tags only" }));
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      "bscf_filters_tags",
+      expect.stringContaining("tags only"),
+    );
+    filterStore.reload();
+    tagFilterStore.reload();
+    expect(filterStore.get().searchString).toBe("");
+    expect(tagFilterStore.get().searchString).toBe("tags only");
+  });
+
+  it("starts from the same defaults as the feed store", () => {
+    expect(tagFilterStore.get()).toEqual(filterStore.get());
   });
 });

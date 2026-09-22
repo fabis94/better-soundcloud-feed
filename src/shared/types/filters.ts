@@ -56,4 +56,17 @@ export interface FilterState {
   searchOperator: "and" | "or";
   minDurationSeconds: number | null;
   maxDurationSeconds: number | null;
+  /**
+   * Inclusive local calendar days ("YYYY-MM-DD"). Compared against the item's
+   * post/repost date on the feed and the upload date on tag pages.
+   */
+  createdFrom: string | null;
+  createdTo: string | null;
+  minLikes: number | null;
+  maxLikes: number | null;
+  minPlays: number | null;
+  maxPlays: number | null;
+  /** Uploader's follower count (`user.followers_count`; the playlist owner for playlist-level checks). */
+  minFollowers: number | null;
+  maxFollowers: number | null;
 }

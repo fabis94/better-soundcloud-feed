@@ -4,6 +4,7 @@ import type {
   SCPlaylist,
   SCStreamItem,
   SCStreamResponse,
+  SCTrackCollectionResponse,
   FilterState,
 } from "../shared/types";
 import { DEFAULT_FILTERS } from "../shared/stores/filter-store";
@@ -104,6 +105,7 @@ export function buildPlaylist(overrides: Partial<SCPlaylist> = {}): SCPlaylist {
     duration: 900000,
     artwork_url: null,
     created_at: new Date().toISOString(),
+    likes_count: 0,
     tracks: [],
     ...overrides,
   };
@@ -134,6 +136,18 @@ export function buildStreamResponse(overrides: Record<string, unknown> = {}): SC
     query_urn: null,
     ...overrides,
   } as SCStreamResponse;
+}
+
+/** Bare-track collection as returned by `/recent-tracks/<tag>` and `/search/tracks`. */
+export function buildTrackCollectionResponse(
+  overrides: Record<string, unknown> = {},
+): SCTrackCollectionResponse {
+  return {
+    collection: [buildTrack()],
+    next_href: null,
+    query_urn: null,
+    ...overrides,
+  } as SCTrackCollectionResponse;
 }
 
 export function buildFilters(overrides: Partial<FilterState> = {}): FilterState {

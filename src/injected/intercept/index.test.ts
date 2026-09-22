@@ -2,8 +2,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "@voidzero-dev/vite-plus-test";
 import type { FilterState } from "../../shared/types";
 import { DEFAULT_FILTERS } from "../../shared/stores/filter-store";
-import { buildStreamResponse, buildStreamItem, buildTrack } from "../../test/factories";
+import {
+  buildStreamResponse,
+  buildStreamItem,
+  buildTrack,
+  buildTrackCollectionResponse,
+} from "../../test/factories";
+import { PageKind } from "../../shared/pages";
 import { createFetchInterceptor, patchXHR } from ".";
+
+const RECENT_URL =
+  "https://api-v2.soundcloud.com/recent-tracks/speed%20garage?limit=10&offset=0&linked_partitioning=1";
+const TAG_SEARCH_URL =
+  "https://api-v2.soundcloud.com/search/tracks?q=*&filter.genre_or_tag=speed%20garage&sort=popular&limit=10&offset=0";
 
 const noopLog = { debug: vi.fn() };
 
@@ -329,5 +340,148 @@ describe("patchXHR", () => {
 
     // responseText should remain unchanged since JSON parse failed
     expect(xhr.responseText).toBe("not json");
+  });
+});
+
+// --- tag pages ---
+
+describe("tag pages (fetch)", () => {
+  it("filters recent tracks with the tag-page filters", async () => {
+    setPathname("/tags/speed%20garage");
+    const response = buildTrackCollectionResponse({
+      collection: [buildTrack({ title: "Keep Me" }), buildTrack({ title: "Remove Me" })],
+    });
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(response)));
+    const getFilters = vi.fn(() => makeFilters({ searchString: "Keep Me" }));
+    const intercepted = createFetchInterceptor(original, getFilters, noopLog);
+
+    const result = await (await intercepted(RECENT_URL)).json();
+
+    expect(getFilters).toHaveBeenCalledWith(PageKind.TagRecent);
+    expect(result.collection).toHaveLength(1);
+    expect(result.collection[0].title).toBe("Keep Me");
+    // client-side filter active → first page doubled
+    expect(new URL(String(original.mock.calls[0]![0])).searchParams.get("limit")).toBe("20");
+  });
+
+  it("adds server-side buckets to the popular tab's search request", async () => {
+    setPathname("/tags/speed%20garage/popular-tracks");
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(buildTrackCollectionResponse())));
+    const getFilters = vi.fn(() =>
+      makeFilters({ minDurationSeconds: 1800, createdFrom: "2000-01-01" }),
+    );
+    const intercepted = createFetchInterceptor(original, getFilters, noopLog);
+
+    await intercepted(TAG_SEARCH_URL);
+
+    expect(getFilters).toHaveBeenCalledWith(PageKind.TagPopular);
+    const sent = new URL(String(original.mock.calls[0]![0])).searchParams;
+    expect(sent.get("filter.duration")).toBe("epic");
+    expect(sent.has("filter.created_at")).toBe(false); // older than a year → no bucket
+    expect(sent.get("filter.genre_or_tag")).toBe("speed garage");
+  });
+
+  it("leaves everything alone on the playlists tab", async () => {
+    setPathname("/tags/speed%20garage/playlists");
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(buildTrackCollectionResponse())));
+    const getFilters = vi.fn(() => makeFilters({ searchString: "nothing matches" }));
+    const intercepted = createFetchInterceptor(original, getFilters, noopLog);
+
+    const result = await (await intercepted(RECENT_URL)).json();
+
+    expect(original).toHaveBeenCalledWith(RECENT_URL, undefined);
+    expect(getFilters).not.toHaveBeenCalled();
+    expect(result.collection).toHaveLength(1);
+  });
+
+  it("does not hijack the global search page", async () => {
+    setPathname("/search/sounds");
+    const original = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify(buildTrackCollectionResponse())));
+    const intercepted = createFetchInterceptor(original, () => makeFilters(), noopLog);
+
+    await intercepted(TAG_SEARCH_URL);
+
+    expect(original).toHaveBeenCalledWith(TAG_SEARCH_URL, undefined);
+  });
+});
+
+describe("tag pages (XHR)", () => {
+  let origOpen: typeof XMLHttpRequest.prototype.open;
+  let origSend: typeof XMLHttpRequest.prototype.send;
+
+  beforeEach(() => {
+    origOpen = XMLHttpRequest.prototype.open;
+    origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function () {};
+    XMLHttpRequest.prototype.send = function () {};
+  });
+
+  afterEach(() => {
+    XMLHttpRequest.prototype.open = origOpen;
+    XMLHttpRequest.prototype.send = origSend;
+  });
+
+  function captureHandler(xhr: XMLHttpRequest): () => (() => void) | undefined {
+    let captured: (() => void) | undefined;
+    const origAdd = xhr.addEventListener.bind(xhr);
+    xhr.addEventListener = function (type: string, handler: EventListenerOrEventListenerObject) {
+      if (type === "readystatechange") captured = handler as () => void;
+      return origAdd(type, handler);
+    };
+    return () => captured;
+  }
+
+  it("filters a recent-tracks response with the target resolved at open()", () => {
+    setPathname("/tags/speed%20garage");
+    const response = buildTrackCollectionResponse({
+      collection: [buildTrack({ likes_count: 1 }), buildTrack({ likes_count: 100 })],
+    });
+    const getFilters = vi.fn(() => makeFilters({ minLikes: 50 }));
+    patchXHR(getFilters, noopLog);
+
+    const xhr = new XMLHttpRequest();
+    const handler = captureHandler(xhr);
+    xhr.open("GET", RECENT_URL);
+    // Even if SC pushes a new path before send(), the target from open() is used.
+    setPathname("/tags/speed%20garage/popular-tracks");
+    xhr.send();
+
+    Object.defineProperty(xhr, "readyState", { value: 4, configurable: true });
+    Object.defineProperty(xhr, "responseText", {
+      value: JSON.stringify(response),
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(xhr, "response", {
+      value: JSON.stringify(response),
+      writable: true,
+      configurable: true,
+    });
+    handler()?.call(xhr);
+
+    expect(getFilters).toHaveBeenCalledWith(PageKind.TagRecent);
+    const result = JSON.parse(xhr.responseText);
+    expect(result.collection).toHaveLength(1);
+    expect(result.collection[0].likes_count).toBe(100);
+  });
+
+  it("registers no listener on the playlists tab", () => {
+    setPathname("/tags/speed%20garage/playlists");
+    patchXHR(() => makeFilters({ minLikes: 50 }), noopLog);
+
+    const xhr = new XMLHttpRequest();
+    const handler = captureHandler(xhr);
+    xhr.open("GET", RECENT_URL);
+    xhr.send();
+
+    expect(handler()).toBeUndefined();
   });
 });

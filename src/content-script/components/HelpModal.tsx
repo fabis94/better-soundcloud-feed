@@ -9,8 +9,33 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
       <h2>Filters</h2>
 
       <section class="scf-modal-section">
+        <h3>Where Filters Work</h3>
+        <ul>
+          <li>
+            <strong>Your feed</strong> (<code>/feed</code>) — the full set of filters below
+          </li>
+          <li>
+            <strong>Tag pages</strong> (<code>/tags/…</code>) — the <em>Recent Tracks</em> and{" "}
+            <em>Popular Tracks</em> tabs get the same panel minus activity types (those pages only
+            list tracks). The <em>Playlists</em> tab is left untouched.
+          </li>
+        </ul>
+        <p>
+          The feed and tag pages remember <strong>separate</strong> filters, so pruning your feed
+          never changes how you dig through a tag. Sorting isn&apos;t offered because
+          SoundCloud&apos;s API has no sort options on these pages.
+        </p>
+        <p>
+          One rule for every filter: when an item offers the same kind of value from several sources
+          — the uploader&apos;s, reposter&apos;s and release artist&apos;s names, the post time and
+          the upload date, the uploader&apos;s and the reposter&apos;s followers — it is enough for{" "}
+          <em>any one</em> of them to satisfy the filter.
+        </p>
+      </section>
+
+      <section class="scf-modal-section">
         <h3>Activity Types</h3>
-        <p>Toggle which types of feed items to show:</p>
+        <p>Feed only. Toggle which types of feed items to show:</p>
         <ul>
           <li>
             <strong>Tracks</strong> — original track posts
@@ -28,7 +53,8 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
       <section class="scf-modal-section">
         <h3>Search</h3>
         <p>
-          Search works in two modes: <strong>Simple</strong> and <strong>Extended</strong>.
+          Search works in two modes, <strong>Simple</strong> and <strong>Extended</strong>, switched
+          with the toggle at the start of the Search row.
         </p>
 
         <h4>Simple Mode</h4>
@@ -46,9 +72,9 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
           non-empty fields are used.
         </p>
         <p>
-          In both modes, <strong>Artist</strong> covers the uploader, the reposter, and the release
-          artist SoundCloud shows on the track (which can differ from the uploader, e.g. on label
-          accounts).
+          In both modes, <strong>Artist</strong> covers the uploader, the release artist SoundCloud
+          shows on the track (which can differ from the uploader, e.g. on label accounts) and, on
+          the feed, the reposter.
         </p>
       </section>
 
@@ -105,26 +131,70 @@ function HelpModalContent({ onClose }: { onClose: () => void }) {
           Filter tracks by length in minutes. Set a minimum, maximum, or both. Applies only to
           tracks (not playlists).
         </p>
+        <p>
+          On the <em>Popular Tracks</em> tab, a range that fits one of SoundCloud&apos;s own length
+          buckets (under 2, 2–10, 10–30, over 30 minutes) is also applied server-side, so fewer
+          unwanted tracks are loaded in the first place. Your exact range is still enforced.
+        </p>
+      </section>
+
+      <section class="scf-modal-section">
+        <h3>Date</h3>
+        <p>
+          A from/to range of calendar days (both inclusive; either can be left empty), picked with
+          your browser&apos;s date picker.
+        </p>
+        <ul>
+          <li>
+            On the feed (row labelled <strong>Date</strong>) an item passes if <em>either</em> the
+            time it was posted or reposted <em>or</em> the track&apos;s upload date falls in the
+            range. So a fresh repost of an old track counts as recent, and it also counts as old.
+          </li>
+          <li>
+            On tag pages (labelled <strong>Uploaded</strong>) only the track&apos;s upload date
+            exists.
+          </li>
+        </ul>
+        <p>
+          On the <em>Popular Tracks</em> tab a set <em>From</em> date is also applied server-side
+          via SoundCloud&apos;s &quot;added in the past hour / day / week / month / year&quot;
+          filter; the exact range is still enforced afterwards.
+        </p>
+      </section>
+
+      <section class="scf-modal-section">
+        <h3>Likes, Plays &amp; Followers</h3>
+        <p>
+          Minimum and/or maximum like and play counts, and the uploader&apos;s follower count. A
+          maximum is handy for surfacing under-the-radar tracks and artists. Applied locally on
+          every page.
+        </p>
+        <p>
+          Followers passes if <em>either</em> the uploader <em>or</em> whoever reposted the item has
+          a follower count in range. For playlist posts on the feed, likes use the playlist&apos;s
+          own count, followers use the owner or the poster, and plays are checked per track — the
+          playlist passes if any of its tracks does.
+        </p>
+      </section>
+
+      <section class="scf-modal-section">
+        <h3>Page Size</h3>
+        <p>
+          Whenever a locally applied filter is active, the extension asks SoundCloud for twice its
+          usual page size so filtered pages don&apos;t come back nearly empty.
+        </p>
       </section>
 
       <section class="scf-modal-section">
         <h3>Actions</h3>
         <ul>
           <li>
-            <strong>Apply</strong> — saves filters and applies them to next loaded pages
-            (already-loaded items stay visible, page doesn't refresh)
+            <strong>Apply &amp; Reload</strong> — saves the filters for this page and reloads it so
+            every loaded item respects them
           </li>
           <li>
-            <strong>Apply &amp; Reload</strong> — saves filters and reloads the page so the very
-            first page already uses the new filters
-          </li>
-          <li>
-            <strong>Extended / Simple Mode</strong> — switches between single-input and per-field
-            search
-          </li>
-          <li>
-            <strong>Clear</strong> — resets the UI to defaults (does not auto-apply — click Apply to
-            persist)
+            <strong>Clear</strong> — resets the panel to defaults (nothing is saved until you click
+            Apply &amp; Reload)
           </li>
         </ul>
       </section>

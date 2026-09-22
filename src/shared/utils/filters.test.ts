@@ -1,5 +1,11 @@
 import { describe, it, expect } from "@voidzero-dev/vite-plus-test";
-import { matchesFilters, filterStreamResponse } from "./filters";
+import {
+  matchesFilters,
+  filterStreamResponse,
+  filterTrackResponse,
+  trackToStreamItem,
+  hasClientSideFilters,
+} from "./filters";
 import {
   buildStreamItem,
   buildTrack,
@@ -7,6 +13,7 @@ import {
   buildUser,
   buildFilters,
   buildStreamResponse,
+  buildTrackCollectionResponse,
 } from "../../test/factories";
 import { SearchField } from "../types";
 
@@ -403,5 +410,383 @@ describe("filterStreamResponse", () => {
     const originalLength = response.collection!.length;
     filterStreamResponse(response, buildFilters({ searchString: "keep" }));
     expect(response.collection).toHaveLength(originalLength);
+  });
+});
+
+// --- date / likes / plays ---
+
+/** ISO timestamp for a local calendar day at the given hour. */
+const localIso = (y: number, m: number, d: number, h = 12): string =>
+  new Date(y, m - 1, d, h).toISOString();
+
+describe("date range", () => {
+  // A plain track post: the post time and the track's upload time are the same moment.
+  const itemOn = (created_at: string) =>
+    buildStreamItem({ created_at, track: buildTrack({ created_at }) });
+
+  it("passes everything when no bound is set", () => {
+    expect(matchesFilters(itemOn(localIso(2010, 1, 1)), buildFilters())).toBe(true);
+  });
+
+  it("`from` is inclusive of the whole day", () => {
+    const filters = buildFilters({ createdFrom: "2026-09-21" });
+    expect(matchesFilters(itemOn(localIso(2026, 9, 21, 0)), filters)).toBe(true);
+    expect(matchesFilters(itemOn(localIso(2026, 9, 25)), filters)).toBe(true);
+    expect(matchesFilters(itemOn(localIso(2026, 9, 20, 23)), filters)).toBe(false);
+  });
+
+  it("`to` is inclusive of the whole day", () => {
+    const filters = buildFilters({ createdTo: "2026-09-21" });
+    expect(matchesFilters(itemOn(localIso(2026, 9, 21, 23)), filters)).toBe(true);
+    expect(matchesFilters(itemOn(localIso(2026, 9, 22, 0)), filters)).toBe(false);
+  });
+
+  it("combines both bounds", () => {
+    const filters = buildFilters({ createdFrom: "2026-09-01", createdTo: "2026-09-30" });
+    expect(matchesFilters(itemOn(localIso(2026, 9, 15)), filters)).toBe(true);
+    expect(matchesFilters(itemOn(localIso(2026, 8, 31)), filters)).toBe(false);
+    expect(matchesFilters(itemOn(localIso(2026, 10, 1)), filters)).toBe(false);
+  });
+
+  it("passes when either the post/repost time or the upload time is in range", () => {
+    const recent = buildFilters({ createdFrom: "2026-09-21" });
+    const old = buildFilters({ createdTo: "2020-01-01" });
+    const repostOfOldTrack = buildStreamItem({
+      type: "track-repost",
+      created_at: localIso(2026, 9, 22),
+      track: buildTrack({ created_at: localIso(2015, 1, 1) }),
+    });
+    // repost time satisfies "recent", upload time satisfies "old"
+    expect(matchesFilters(repostOfOldTrack, recent)).toBe(true);
+    expect(matchesFilters(repostOfOldTrack, old)).toBe(true);
+
+    const between = buildFilters({ createdFrom: "2018-01-01", createdTo: "2020-01-01" });
+    expect(matchesFilters(repostOfOldTrack, between)).toBe(false);
+  });
+
+  it("checks playlist posts by their post time and by each track's upload time", () => {
+    const old = buildFilters({ createdTo: "2020-01-01" });
+    const freshPlaylist = buildStreamItem({
+      type: "playlist",
+      created_at: localIso(2026, 9, 22),
+      playlist: buildPlaylist({ tracks: [buildTrack({ created_at: localIso(2026, 9, 1) })] }),
+    });
+    expect(matchesFilters(freshPlaylist, old)).toBe(false);
+
+    const freshPlaylistWithOldTrack = buildStreamItem({
+      type: "playlist",
+      created_at: localIso(2026, 9, 22),
+      playlist: buildPlaylist({ tracks: [buildTrack({ created_at: localIso(2015, 1, 1) })] }),
+    });
+    expect(matchesFilters(freshPlaylistWithOldTrack, old)).toBe(true);
+  });
+
+  it("passes items with no parseable date at all", () => {
+    const filters = buildFilters({ createdFrom: "2026-09-21" });
+    const garbage = buildStreamItem({
+      created_at: "garbage",
+      track: buildTrack({ created_at: "nope" }),
+    });
+    expect(matchesFilters(garbage, filters)).toBe(true);
+    const missing = buildStreamItem({ track: buildTrack({ created_at: undefined }) });
+    delete missing.created_at;
+    expect(matchesFilters(missing, filters)).toBe(true);
+  });
+
+  it("ignores an unparseable source but still checks the other", () => {
+    const filters = buildFilters({ createdFrom: "2026-09-21" });
+    const item = buildStreamItem({
+      created_at: "garbage",
+      track: buildTrack({ created_at: localIso(2015, 1, 1) }),
+    });
+    expect(matchesFilters(item, filters)).toBe(false);
+  });
+});
+
+describe("likes and plays", () => {
+  const trackWith = (likes: number, plays: number) =>
+    buildStreamItem({ track: buildTrack({ likes_count: likes, playback_count: plays }) });
+
+  it("checks likes against an inclusive min/max", () => {
+    const item = trackWith(10, 0);
+    expect(matchesFilters(item, buildFilters({ minLikes: 10 }))).toBe(true);
+    expect(matchesFilters(item, buildFilters({ minLikes: 11 }))).toBe(false);
+    expect(matchesFilters(item, buildFilters({ maxLikes: 10 }))).toBe(true);
+    expect(matchesFilters(item, buildFilters({ maxLikes: 9 }))).toBe(false);
+    expect(matchesFilters(item, buildFilters({ minLikes: 5, maxLikes: 15 }))).toBe(true);
+  });
+
+  it("checks plays against an inclusive min/max", () => {
+    const item = trackWith(0, 500);
+    expect(matchesFilters(item, buildFilters({ minPlays: 500 }))).toBe(true);
+    expect(matchesFilters(item, buildFilters({ minPlays: 501 }))).toBe(false);
+    expect(matchesFilters(item, buildFilters({ maxPlays: 500 }))).toBe(true);
+    expect(matchesFilters(item, buildFilters({ maxPlays: 499 }))).toBe(false);
+  });
+
+  it("passes tracks whose counts are missing", () => {
+    const item = buildStreamItem({
+      track: buildTrack({ likes_count: undefined, playback_count: undefined }),
+    });
+    expect(matchesFilters(item, buildFilters({ minLikes: 100, minPlays: 100 }))).toBe(true);
+  });
+
+  it("combines with search and duration", () => {
+    const item = buildStreamItem({
+      track: buildTrack({ title: "Garage Dub", likes_count: 20, duration: 200_000 }),
+    });
+    expect(
+      matchesFilters(
+        item,
+        buildFilters({ searchString: "garage", minLikes: 10, maxDurationSeconds: 300 }),
+      ),
+    ).toBe(true);
+    expect(
+      matchesFilters(
+        item,
+        buildFilters({ searchString: "garage", minLikes: 30, maxDurationSeconds: 300 }),
+      ),
+    ).toBe(false);
+  });
+
+  describe("playlists", () => {
+    it("uses the playlist's own likes at playlist level", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          likes_count: 50,
+          tracks: [buildTrack({ likes_count: 0 }), buildTrack({ likes_count: 0 })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ minLikes: 40 }))).toBe(true);
+      expect(matchesFilters(item, buildFilters({ minLikes: 60 }))).toBe(false);
+    });
+
+    it("passes when any track meets the likes filter even if the playlist does not", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          likes_count: 0,
+          tracks: [buildTrack({ likes_count: 0 }), buildTrack({ likes_count: 80 })],
+        }),
+      });
+      expect(matchesFilters(item, buildFilters({ minLikes: 60 }))).toBe(true);
+    });
+
+    it("plays filter is checked per track only (playlists have no play count)", () => {
+      const noPlays = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          likes_count: 999,
+          tracks: [buildTrack({ playback_count: 0 }), buildTrack({ playback_count: 0 })],
+        }),
+      });
+      expect(matchesFilters(noPlays, buildFilters({ minPlays: 1 }))).toBe(false);
+
+      const onePopular = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({
+          tracks: [buildTrack({ playback_count: 0 }), buildTrack({ playback_count: 5 })],
+        }),
+      });
+      expect(matchesFilters(onePopular, buildFilters({ minPlays: 1 }))).toBe(true);
+    });
+
+    it("a playlist without tracks is judged by its own likes", () => {
+      const item = buildStreamItem({
+        type: "playlist",
+        playlist: buildPlaylist({ likes_count: 3, tracks: [] }),
+      });
+      expect(matchesFilters(item, buildFilters({ minLikes: 3 }))).toBe(true);
+      expect(matchesFilters(item, buildFilters({ minLikes: 4 }))).toBe(false);
+    });
+  });
+});
+
+describe("trackToStreamItem", () => {
+  it("wraps a bare track and promotes its upload date to the item date", () => {
+    const track = buildTrack({ created_at: "2026-09-22T03:53:37Z" });
+    const item = trackToStreamItem(track);
+    expect(item.type).toBe("track");
+    expect(item.track).toBe(track);
+    expect(item.created_at).toBe("2026-09-22T03:53:37Z");
+    expect(item.playlist).toBeUndefined();
+    expect(item.user).toBeUndefined();
+  });
+
+  it("lets every filter apply to bare tracks", () => {
+    const track = buildTrack({
+      title: "Speed Garage Dub",
+      created_at: localIso(2026, 9, 22),
+      likes_count: 12,
+      playback_count: 300,
+      duration: 240_000,
+      user: buildUser({ username: "CAPES" }),
+    });
+    const passing = buildFilters({
+      searchMode: "extended",
+      searchArtist: "capes",
+      createdFrom: "2026-09-01",
+      minLikes: 10,
+      maxPlays: 1000,
+      minDurationSeconds: 60,
+    });
+    expect(matchesFilters(trackToStreamItem(track), passing)).toBe(true);
+    expect(
+      matchesFilters(trackToStreamItem(track), { ...passing, createdFrom: "2026-09-23" }),
+    ).toBe(false);
+  });
+});
+
+describe("filterTrackResponse", () => {
+  it("keeps only matching tracks", () => {
+    const response = buildTrackCollectionResponse({
+      collection: [
+        buildTrack({ title: "Garage" }),
+        buildTrack({ title: "Techno" }),
+        buildTrack({ title: "House" }),
+      ],
+    });
+    const result = filterTrackResponse(
+      response,
+      buildFilters({ searchString: "garage, house", searchOperator: "or" }),
+    );
+    expect(result.collection?.map((t) => t?.title)).toEqual(["Garage", "House"]);
+  });
+
+  it("preserves pagination fields and total_results", () => {
+    const response = buildTrackCollectionResponse({
+      next_href: "https://api-v2.soundcloud.com/recent-tracks/x?offset=cursor",
+      query_urn: "soundcloud:search:abc",
+      total_results: 23570,
+    });
+    const result = filterTrackResponse(response, buildFilters());
+    expect(result.next_href).toBe(response.next_href);
+    expect(result.query_urn).toBe(response.query_urn);
+    expect(result.total_results).toBe(23570);
+  });
+
+  it("does not mutate the original response", () => {
+    const response = buildTrackCollectionResponse({
+      collection: [buildTrack({ title: "Keep" }), buildTrack({ title: "Remove" })],
+    });
+    filterTrackResponse(response, buildFilters({ searchString: "keep" }));
+    expect(response.collection).toHaveLength(2);
+  });
+
+  it("tolerates a missing collection", () => {
+    const result = filterTrackResponse({ next_href: null }, buildFilters());
+    expect(result.collection).toBeUndefined();
+  });
+});
+
+describe("hasClientSideFilters", () => {
+  it("is false for defaults and for activity types alone", () => {
+    expect(hasClientSideFilters(buildFilters())).toBe(false);
+    expect(hasClientSideFilters(buildFilters({ activityTypes: ["TrackPost"] }))).toBe(false);
+  });
+
+  it("is true for each client-side filter", () => {
+    expect(hasClientSideFilters(buildFilters({ searchString: "x" }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ minDurationSeconds: 1 }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ maxDurationSeconds: 1 }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ createdFrom: "2026-01-01" }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ createdTo: "2026-01-01" }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ minLikes: 0 }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ maxLikes: 0 }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ minPlays: 0 }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ maxPlays: 0 }))).toBe(true);
+  });
+
+  it("mirrors the search predicate's notion of an active search", () => {
+    expect(hasClientSideFilters(buildFilters({ searchString: "x", searchFields: [] }))).toBe(false);
+    expect(
+      hasClientSideFilters(buildFilters({ searchMode: "extended", searchString: "ignored" })),
+    ).toBe(false);
+    expect(hasClientSideFilters(buildFilters({ searchMode: "extended", searchLabel: "x" }))).toBe(
+      true,
+    );
+  });
+});
+
+describe("uploader followers", () => {
+  // A plain track post: the poster is the uploader, so there is a single follower count.
+  const byUploaderWith = (followers: number) => {
+    const uploader = buildUser({ followers_count: followers });
+    return buildStreamItem({ user: uploader, track: buildTrack({ user: uploader }) });
+  };
+
+  it("checks the track uploader's followers against an inclusive min/max", () => {
+    const item = byUploaderWith(1000);
+    expect(matchesFilters(item, buildFilters({ minFollowers: 1000 }))).toBe(true);
+    expect(matchesFilters(item, buildFilters({ minFollowers: 1001 }))).toBe(false);
+    expect(matchesFilters(item, buildFilters({ maxFollowers: 1000 }))).toBe(true);
+    expect(matchesFilters(item, buildFilters({ maxFollowers: 999 }))).toBe(false);
+  });
+
+  it("passes when either the uploader or the reposter is in range", () => {
+    const item = buildStreamItem({
+      type: "track-repost",
+      user: buildUser({ followers_count: 1_000_000 }),
+      track: buildTrack({ user: buildUser({ followers_count: 5 }) }),
+    });
+    expect(matchesFilters(item, buildFilters({ minFollowers: 100 }))).toBe(true); // reposter
+    expect(matchesFilters(item, buildFilters({ maxFollowers: 100 }))).toBe(true); // uploader
+    // 5 fails the min and 1,000,000 fails the max: no single source is inside [100, 1000]
+    expect(matchesFilters(item, buildFilters({ minFollowers: 100, maxFollowers: 1000 }))).toBe(
+      false,
+    );
+  });
+
+  it("passes when every source is missing, and skips missing sources otherwise", () => {
+    const none = buildStreamItem({
+      user: buildUser({ followers_count: undefined }),
+      track: buildTrack({ user: buildUser({ followers_count: undefined }) }),
+    });
+    expect(matchesFilters(none, buildFilters({ minFollowers: 100 }))).toBe(true);
+
+    const onlyUploader = buildStreamItem({
+      user: buildUser({ followers_count: undefined }),
+      track: buildTrack({ user: buildUser({ followers_count: 5 }) }),
+    });
+    expect(matchesFilters(onlyUploader, buildFilters({ minFollowers: 100 }))).toBe(false);
+  });
+
+  it("uses the owner or the poster at playlist level and each uploader per track", () => {
+    const item = buildStreamItem({
+      type: "playlist",
+      user: buildUser({ followers_count: 20 }),
+      playlist: buildPlaylist({
+        user: buildUser({ followers_count: 50 }),
+        tracks: [
+          buildTrack({ user: buildUser({ followers_count: 1 }) }),
+          buildTrack({ user: buildUser({ followers_count: 500 }) }),
+        ],
+      }),
+    });
+    expect(matchesFilters(item, buildFilters({ maxFollowers: 25 }))).toBe(true); // poster (20)
+    expect(matchesFilters(item, buildFilters({ minFollowers: 40 }))).toBe(true); // owner (50)
+    expect(matchesFilters(item, buildFilters({ minFollowers: 400 }))).toBe(true); // 2nd track
+    expect(matchesFilters(item, buildFilters({ minFollowers: 600 }))).toBe(false);
+  });
+
+  it("applies to bare tag-page tracks", () => {
+    const track = buildTrack({ user: buildUser({ followers_count: 7 }) });
+    const result = filterTrackResponse(
+      buildTrackCollectionResponse({ collection: [track] }),
+      buildFilters({ maxFollowers: 10 }),
+    );
+    expect(result.collection).toHaveLength(1);
+    expect(
+      filterTrackResponse(
+        buildTrackCollectionResponse({ collection: [track] }),
+        buildFilters({ minFollowers: 10 }),
+      ).collection,
+    ).toHaveLength(0);
+  });
+
+  it("counts as a client-side filter", () => {
+    expect(hasClientSideFilters(buildFilters({ minFollowers: 1 }))).toBe(true);
+    expect(hasClientSideFilters(buildFilters({ maxFollowers: 1 }))).toBe(true);
   });
 });
