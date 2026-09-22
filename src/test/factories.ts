@@ -4,6 +4,7 @@ import type {
   SCPlaylist,
   SCStreamItem,
   SCStreamResponse,
+  SCTrackCollectionResponse,
   FilterState,
 } from "../shared/types";
 import { DEFAULT_FILTERS } from "../shared/stores/filter-store";
@@ -40,6 +41,8 @@ export function buildUser(overrides: Partial<SCUser> = {}): SCUser {
 export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
   const id = nextId();
   const user = overrides.user ?? buildUser();
+  // SC shows display_date; keep it equal to created_at unless a test sets them apart.
+  const createdAt = overrides.created_at ?? new Date().toISOString();
   return {
     id,
     title: `Track ${id}`,
@@ -51,7 +54,7 @@ export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
     caption: null,
     commentable: true,
     comment_count: 0,
-    created_at: new Date().toISOString(),
+    created_at: createdAt,
     description: "",
     downloadable: false,
     download_count: 0,
@@ -80,7 +83,7 @@ export function buildTrack(overrides: Partial<SCTrack> = {}): SCTrack {
     user_id: user.id,
     visuals: null,
     waveform_url: `https://wave.sndcdn.com/${id}_m.json`,
-    display_date: new Date().toISOString(),
+    display_date: createdAt,
     media: { transcodings: [] },
     station_urn: `soundcloud:system-playlists:track-stations:${id}`,
     station_permalink: `track-stations:${id}`,
@@ -104,6 +107,7 @@ export function buildPlaylist(overrides: Partial<SCPlaylist> = {}): SCPlaylist {
     duration: 900000,
     artwork_url: null,
     created_at: new Date().toISOString(),
+    likes_count: 0,
     tracks: [],
     ...overrides,
   };
@@ -134,6 +138,18 @@ export function buildStreamResponse(overrides: Record<string, unknown> = {}): SC
     query_urn: null,
     ...overrides,
   } as SCStreamResponse;
+}
+
+/** Bare-track collection as returned by `/recent-tracks/<tag>` and `/search/tracks`. */
+export function buildTrackCollectionResponse(
+  overrides: Record<string, unknown> = {},
+): SCTrackCollectionResponse {
+  return {
+    collection: [buildTrack()],
+    next_href: null,
+    query_urn: null,
+    ...overrides,
+  } as SCTrackCollectionResponse;
 }
 
 export function buildFilters(overrides: Partial<FilterState> = {}): FilterState {

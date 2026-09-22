@@ -117,6 +117,7 @@ interface SCRawPlaylist {
   duration: number;
   artwork_url: string | null;
   created_at: string;
+  likes_count: number;
   tracks: SCRawTrack[];
 }
 
@@ -130,10 +131,18 @@ interface SCRawStreamItem {
   playlist?: SCRawPlaylist;
 }
 
-interface SCRawStreamResponse {
-  collection: SCRawStreamItem[];
+/** Paginated envelope shared by every SC list endpoint. */
+interface SCRawCollection<T> {
+  collection: T[];
   next_href: string | null;
   query_urn: string | null;
+}
+
+type SCRawStreamResponse = SCRawCollection<SCRawStreamItem>;
+
+/** `/recent-tracks/<tag>` and `/search/tracks` return bare tracks (search adds `total_results`). */
+interface SCRawTrackCollectionResponse extends SCRawCollection<SCRawTrack> {
+  total_results?: number;
 }
 
 // --- Exported deeply partial types (SC can change their API at any time) ---
@@ -153,3 +162,4 @@ export type SCTrack = Deep<SCRawTrack>;
 export type SCPlaylist = Deep<SCRawPlaylist>;
 export type SCStreamItem = Deep<SCRawStreamItem>;
 export type SCStreamResponse = Deep<SCRawStreamResponse>;
+export type SCTrackCollectionResponse = Deep<SCRawTrackCollectionResponse>;

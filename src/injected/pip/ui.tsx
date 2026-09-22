@@ -1,7 +1,7 @@
 import { render } from "preact";
 import { useRef, useEffect } from "preact/hooks";
 import { useComputed } from "@preact/signals";
-import { REPO_URL } from "../../shared/constants";
+import { REPO_URL, APP_NAME } from "../../shared/constants";
 import { formatTime, formatRelativeTime } from "../../shared/utils/format";
 import { seekOrSkip } from "../player/seek";
 import {
@@ -240,7 +240,7 @@ function Branding() {
   return (
     <div class="pip-branding" onClick={() => window.open(REPO_URL, "_blank")}>
       <SvgIcon html={brandingIcon} className="pip-branding-icon" />
-      {" Better SoundCloud Feed"}
+      {" " + APP_NAME}
     </div>
   );
 }

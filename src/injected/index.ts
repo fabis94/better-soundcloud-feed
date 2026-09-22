@@ -1,5 +1,6 @@
 import { BridgeMessageType, type BridgeMessage } from "../shared/types";
-import { filterStore } from "../shared/stores/filter-store";
+import { filterStore, tagFilterStore, getFilterStore } from "../shared/stores/filter-store";
+import type { PageKind } from "../shared/pages";
 import { settingsStore } from "../shared/stores/settings-store";
 import { createLogger } from "../shared/utils/logger";
 import { createFetchInterceptor, patchXHR } from "./intercept";
@@ -29,13 +30,14 @@ const log = createLogger("injected");
   });
 
   log.debug("Initial filters loaded from localStorage", {
-    filters: filterStore.get(),
+    feed: filterStore.get(),
+    tags: tagFilterStore.get(),
   });
 
-  // getFilters always returns the latest state — cross-realm sync via
-  // ReactiveStore means filterStore.get() reflects updates from the
-  // content script automatically (no manual SC_FILTER_UPDATE needed).
-  const getFilters = () => filterStore.get();
+  // getFilters always returns the latest state for the page a request belongs
+  // to — cross-realm sync via ReactiveStore means store.get() reflects updates
+  // from the content script automatically (no manual SC_FILTER_UPDATE needed).
+  const getFilters = (kind: PageKind) => getFilterStore(kind).get();
 
   // Player commands still use explicit messages since they're transient
   // actions, not persisted state.

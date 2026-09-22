@@ -1,10 +1,12 @@
 SoundCloud's feed page is not very good, let's be honest. It gives you pretty much no filtering options so you end up having to scroll through tons of posts that you're not even interested in. Sure, you may unfollow profiles that you don't want to hear anything from, but this is a very simplistic use case - most DJs and producers are sometimes looking for mixes to listen to, sometimes new tracks to add to their mixcrate, sometimes they want one genre and sometimes another. All of the followed profiles are useful, just at different times!
 
-This extension solves the issue by adding a filtering panel above your SoundCloud feed and extra controls in the player bar.
+This extension solves the issue by adding a filtering panel above your SoundCloud feed and above tag pages (Recent Tracks and Popular Tracks), plus extra controls in the player bar.
 
-FEED FILTERS
+FILTERS
 
-Activity types
+The panel works on your feed and on tag pages (the Recent Tracks and Popular Tracks tabs). Feed and tag pages remember their own filters, so pruning your feed never changes how you dig through a tag.
+
+Activity types (feed only)
 Choose what shows up: track posts, track reposts, or playlist posts. Unchecked types are filtered at the API level — they're never even loaded.
 
 Search
@@ -17,7 +19,15 @@ Search supports comma-separated terms, -exclusions, and *wildcard patterns. Togg
 Duration
 Set a minimum and/or maximum track length in minutes. Great for skipping intros, snippets, or marathon DJ sets.
 
-Changes only take effect when you click Apply or Apply & Reload, so you can tweak filters without losing your scroll position.
+The next few live under a collapsible "More filters" toggle (it remembers whether you left it open), so the panel stays compact if you never need them.
+
+Date
+Pick a from/to date range with your browser's date picker. It always uses the date SoundCloud shows on the track. On the feed an item counts if either the time it was posted or reposted, or that date, falls in the range; on tag pages it's that date alone, so you can see only what's new for a tag.
+
+Likes, plays & followers
+Set minimum and/or maximum like and play counts, or a follower-count range that the uploader or whoever reposted the item must fall into. A maximum is a great way to surface under-the-radar tracks and artists nobody has found yet.
+
+Changes take effect when you click Apply & Reload.
 
 PLAYER CONTROLS
 
@@ -40,7 +50,7 @@ Configure PiP in extension settings: auto-open on tab switch (on by default, bro
 A built-in help button (?) explains all features and search syntax right inside the extension.
 
 HOW IT WORKS
-The extension intercepts SoundCloud's API responses and filters them before the page renders. No content is removed from the DOM after loading — filtered items are never shown in the first place. Your filter settings persist across sessions.
+The extension intercepts SoundCloud's API responses and filters them before the page renders. No content is removed from the DOM after loading — filtered items are never shown in the first place. Where SoundCloud's API supports a filter (like date and length on Popular Tracks) it's applied server-side; everything else is filtered locally. Your filter settings persist across sessions.
 
 PRIVACY
 • No data collection
